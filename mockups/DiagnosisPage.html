@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>診断ページ - モックアップ</title>
+
+  <!-- Material UI Fonts -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap"/>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons"/>
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Roboto', sans-serif;
+      font-size: 14px;
+      color: rgba(0, 0, 0, 0.87);
+      background: linear-gradient(135deg, #f8f9fa 0%, #e8f4f8 100%); /* やさしいグラデーション背景 */
+    }
+    .hidden {
+      display: none;
+    }
+
+    /* ========== 同意チェックボックスカードのスタイリング ========== */
+    /* React実装時: MUI Paper + Checkbox で実装。state管理で checked/unchecked を切り替え */
+    /* 【コンセプト】完了・成功ではなく、静かな同意・うなずきを表現 */
+
+    /* 【デフォルト（OFF状態）】淡い色、落ち着いた印象 */
+    .consent-card {
+      background: #ffffff;
+      border: 1px solid #E0E4E8;
+      border-radius: 12px;
+      padding: 20px;
+      cursor: pointer;
+      transition: all 0.2s ease; /* 控えめなトランジション */
+    }
+
+    /* 【① ホバー時】ふわっと反応、クリック可能であることを伝える */
+    /* 「気づく人だけ気づく」程度の控えめな変化 */
+    .consent-card:hover {
+      background: #F4F7FA; /* #F7FAFD からほんの少しだけ濃く */
+      /* 枠線や影は変えない、または極めて控えめに */
+    }
+
+    /* 【② チェックON時（選択状態）】「うん、いいですよ」くらいの静かな同意 */
+    .consent-card.consent-checked {
+      background: #F7FAFD; /* ほぼ白に近い薄いブルーグレー */
+      border: 1px solid rgba(107, 123, 140, 0.2); /* かなり薄い枠線 */
+      box-shadow: 0px 2px 6px rgba(0, 0, 0, 0.05); /* 控えめな影 */
+      transition: all 0.2s ease; /* ふわっと変化 */
+    }
+
+    /* チェックON時のテキストはほぼ変えない（ほんのり濃くする程度） */
+    .consent-card.consent-checked span {
+      color: rgba(0, 0, 0, 0.90); /* ほんのり濃く */
+      font-weight: 400; /* 太字にしない */
+    }
+
+    /* チェックボックス自体のスタイル（カスタムスタイルで静かなトーンに） */
+    .consent-card input[type="checkbox"] {
+      appearance: none;
+      width: 18px;
+      height: 18px;
+      margin-right: 12px;
+      cursor: pointer;
+      border: 1.5px solid #D0D7DE;
+      border-radius: 4px;
+      background: #ffffff;
+      transition: all 0.2s ease;
+      position: relative;
+      flex-shrink: 0;
+    }
+
+    /* チェックボックスホバー時 */
+    .consent-card input[type="checkbox"]:hover {
+      border-color: #A8B5C0;
+    }
+
+    /* チェックON時のチェックボックス */
+    .consent-card input[type="checkbox"]:checked {
+      background: #F7FAFD; /* ほぼ白に近い薄いブルーグレー */
+      border-color: rgba(107, 123, 140, 0.3); /* 落ち着いたブルーグレー */
+    }
+
+    /* チェックマーク（小さめでアウトライン寄り） */
+    .consent-card input[type="checkbox"]:checked::after {
+      content: '✓';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 11px; /* 小さめ */
+      color: #6B7B8C; /* 落ち着いたブルーグレー */
+      font-weight: 400; /* 太くしない */
+      line-height: 1;
+    }
+
+    /* ========== 選択肢カードのスタイリング ========== */
+
+    /* 【非アクティブ（未選択）】デフォルト状態 */
+    .choice-card {
+      position: relative; /* チェックアイコン用 */
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 24px 16px;
+      background: #F5F7FA;
+      border: 2px solid #E0E4E8;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-align: center;
+      min-height: 100px;
+      box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.05);
+    }
+
+    /* 【① ホバー時】触れるボタンだよ感を演出 */
+    .choice-card:hover {
+      border-color: #5BA8E0; /* 少し濃い青 */
+      background-color: #E3F2FD; /* ほんのり水色 */
+      transform: translateY(-2px); /* 浮き上がる */
+      box-shadow: 0px 6px 16px rgba(0, 0, 0, 0.12); /* 影を強く */
+      cursor: pointer;
+    }
+
+    /* 【② 選択中】今これを選んでますが一瞬で分かる */
+    .choice-card.selected {
+      border-color: #1976d2; /* メインブルー */
+      background-color: #E3F2FD; /* メインブルーの10〜15%薄色 */
+      box-shadow: 0px 4px 12px rgba(25, 118, 210, 0.2);
+    }
+
+    /* 選択中のカードにチェックアイコンを表示 */
+    /* React実装時: 選択時のみ表示される疑似要素 */
+    .choice-card.selected::before {
+      content: '✓'; /* チェックマーク */
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      width: 20px;
+      height: 20px;
+      background: #1976d2; /* メインブルー */
+      color: white;
+      border-radius: 50%; /* 丸 */
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: bold;
+      box-shadow: 0px 2px 4px rgba(25, 118, 210, 0.3);
+    }
+
+    /* 選択中カードのテキストを少し濃く */
+    .choice-card.selected span {
+      color: #1565c0;
+      font-weight: 600;
+    }
+
+    /* 選択中カードの基本スタイル */
+    .choice-card span {
+      font-size: 1rem;
+      line-height: 1.6;
+      color: #2c3e50;
+      font-weight: 500;
+    }
+    /* 無効化ボタン */
+    button:disabled {
+      background: #e0e0e0 !important;
+      color: rgba(0, 0, 0, 0.38) !important;
+      cursor: not-allowed !important;
+      box-shadow: none !important;
+    }
+
+    /* ロードアニメーション */
+    @keyframes pulse {
+      0%, 80%, 100% {
+        opacity: 0.3;
+        transform: scale(0.8);
+      }
+      40% {
+        opacity: 1;
+        transform: scale(1.2);
+      }
+    }
+  </style>
+</head>
+<body>
+  <!--
+    📌 MUI変換マッピング表
+    このHTMLモックアップは以下のMUIコンポーネントに変換されます：
+
+    - <h4> → <Typography variant="h4">
+    - <h5> → <Typography variant="h5">
+    - <h6> → <Typography variant="h6">
+    - <p> → <Typography variant="body1">
+    - <small> → <Typography variant="caption">
+    - <button> → <Button variant="contained">
+    - <label> → <Typography component="label">
+    - <input type="checkbox"> → <Checkbox>
+    - <input type="radio"> → <Radio>
+    - margin/padding: spacing()基準（8px単位）
+  -->
+
+  <!-- ========== 画面1: 診断開始画面 ========== -->
+  <div id="screen-start" style="max-width: 600px; margin: 0 auto; padding: 32px 16px;"> <!-- MUI: Container maxWidth="sm" p={2} py={4} -->
+
+    <div style="text-align: center; margin-bottom: 40px;"> <!-- MUI: Box textAlign="center" mb={5} -->
+      <h4 style="font-size: 2.125rem; font-weight: 400; line-height: 1.4; margin-bottom: 16px; color: #2c3e50;"> <!-- MUI: Typography variant="h4" mb={2} -->
+        Threads運用診断
+      </h4>
+      <p style="font-size: 1.125rem; line-height: 1.7; color: #546e7a;"> <!-- MUI: Typography variant="body1" color="text.secondary" fontSize="1.125rem" -->
+        12問（2〜3分）で、「Threadsしんどい理由」がやさしく見えてきます
+      </p>
+    </div>
+
+    <div style="background: white; border-radius: 16px; padding: 32px; box-shadow: 0px 4px 20px rgba(0,0,0,0.08); margin-bottom: 32px;"> <!-- MUI: Paper p={4} mb={4} sx={{ borderRadius: 4 }} -->
+      <h6 style="font-size: 1.25rem; font-weight: 500; line-height: 1.6; margin-bottom: 16px; color: #2c3e50;"> <!-- MUI: Typography variant="h6" mb={2} -->
+        診断でわかること
+      </h6>
+      <ul style="padding-left: 24px; margin: 0;"> <!-- MUI: Box pl={3} -->
+        <li style="margin-bottom: 8px; font-size: 1rem; line-height: 1.5;"> <!-- MUI: Typography variant="body1" component="li" mb={1} -->
+          今のあなたのThreadsの状態
+        </li>
+        <li style="margin-bottom: 8px; font-size: 1rem; line-height: 1.5;"> <!-- MUI: Typography variant="body1" component="li" mb={1} -->
+          うまく進まない理由
+        </li>
+        <li style="font-size: 1rem; line-height: 1.5;"> <!-- MUI: Typography variant="body1" component="li" -->
+          これから楽になる一歩
+        </li>
+      </ul>
+    </div>
+
+    <!-- ========== 同意チェックボックスカード ========== -->
+    <!--
+      【React実装時の注意】
+      - カード全体をクリック可能にする（onClick → setChecked(!checked)）
+      - checked状態でクラス名を動的に切り替える（例: consent-checked）
+      - MUI <Checkbox> は size="small" で、checked時に塗りつぶし表示
+      - MUI <Paper> でカード全体を実装
+      - カード全体とチェックボックス両方でクリックが機能するように実装
+
+      【重要】カード全体がクリック可能
+      - label要素でカード全体を囲むことで、カード全体がクリック可能
+      - チェックボックスのidとlabelのfor属性を紐づける
+      - これによりJavaScript不要でカード全体がクリック可能になる
+      - さらにonclickイベントでカスタムスタイル制御を追加
+    -->
+    <label
+      for="agree-checkbox"
+      id="consent-card"
+      class="consent-card"
+      onclick="toggleConsentStyle()"
+      style="
+        margin-bottom: 32px;
+        display: block;
+      "> <!-- MUI: Paper p={2.5} mb={4} sx={{ borderRadius: 3, cursor: 'pointer', transition: 'all 0.3s ease' }} -->
+      <div style="display: flex; align-items: center; cursor: pointer; user-select: none;"> <!-- MUI: Box display="flex" alignItems="center" -->
+        <input
+          type="checkbox"
+          id="agree-checkbox"> <!-- MUI: Checkbox size="small" (カスタムスタイルでappearance: noneを使用) -->
+        <span style="font-size: 0.875rem; line-height: 1.43; color: rgba(0, 0, 0, 0.87); transition: all 0.2s ease;"> <!-- MUI: Typography variant="body2" -->
+          診断結果に合ったアドバイスを受け取ります
+        </span>
+      </div>
+    </label>
+
+    <button
+      id="start-button"
+      onclick="startDiagnosis()"
+      style="
+        width: 100%;
+        padding: 16px 24px;
+        background: linear-gradient(135deg, #42a5f5 0%, #1976d2 100%); /* theme.palette.primary グラデーション */
+        color: white;
+        border: none;
+        border-radius: 12px;
+        font-size: 1.0625rem;
+        font-weight: 500;
+        cursor: pointer;
+        text-transform: none;
+        letter-spacing: 0.01em;
+        box-shadow: 0px 6px 20px rgba(25, 118, 210, 0.3);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+      "
+      onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0px 8px 24px rgba(25, 118, 210, 0.4)';"
+      onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0px 6px 20px rgba(25, 118, 210, 0.3)';">
+      <!-- MUI: Button variant="contained" color="primary" fullWidth size="large" sx={{ borderRadius: 3, py: 2 }} -->
+      診断を始める
+    </button>
+
+  </div>
+
+  <!-- ========== 画面2: 質問画面 ========== -->
+  <div id="screen-question" class="hidden" style="max-width: 600px; margin: 0 auto; padding: 32px 16px;"> <!-- MUI: Container maxWidth="sm" p={2} py={4} -->
+
+    <!-- プログレスバー -->
+    <div style="margin-bottom: 32px;"> <!-- MUI: Box mb={4} -->
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;"> <!-- MUI: Box display="flex" justifyContent="space-between" mb={1.5} -->
+        <small style="font-size: 0.875rem; font-weight: 500; line-height: 1.66; color: #546e7a;"> <!-- MUI: Typography variant="body2" fontWeight="medium" color="text.secondary" -->
+          質問 <span id="current-question">1</span> / 12
+        </small>
+        <small style="font-size: 0.875rem; font-weight: 500; line-height: 1.66; color: #1976d2;"> <!-- MUI: Typography variant="body2" fontWeight="medium" color="primary.main" -->
+          あと<span id="remaining-questions">11</span>問
+        </small>
+      </div>
+      <div style="height: 10px; background: #e3f2fd; border-radius: 8px; overflow: hidden;"> <!-- MUI: LinearProgress variant="determinate" sx={{ height: 10, borderRadius: 2 }} -->
+        <div id="progress-bar" style="height: 100%; background: linear-gradient(90deg, #42a5f5 0%, #1976d2 100%); width: 8%; transition: width 0.4s ease;"></div> <!-- theme.palette.primary グラデーション -->
+      </div>
+    </div>
+
+    <!-- 質問カード -->
+    <div style="background: white; border-radius: 16px; padding: 32px; box-shadow: 0px 4px 20px rgba(0,0,0,0.08); margin-bottom: 32px;"> <!-- MUI: Paper p={4} mb={4} sx={{ borderRadius: 4 }} -->
+      <h5 id="question-text" style="font-size: 1.5rem; font-weight: 400; line-height: 1.5; margin-bottom: 32px; color: #2c3e50;"> <!-- MUI: Typography variant="h5" mb={4} -->
+        Q1. あなたは発信を「どんな人」に届けたいか説明できますか？
+      </h5>
+
+      <!-- 4択（2×2グリッド配置） -->
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;"> <!-- MUI: Grid container spacing={2} -->
+
+        <label class="choice-card"> <!-- MUI: Paper variant="outlined" sx={{ borderRadius: 3, p: 3 }} -->
+          <input type="radio" name="answer" value="8" style="display: none;"> <!-- MUI: Radio (hidden) -->
+          <span> <!-- MUI: Typography variant="body1" fontWeight="medium" -->
+            はい、できます
+          </span>
+        </label>
+
+        <label class="choice-card"> <!-- MUI: Paper variant="outlined" sx={{ borderRadius: 3, p: 3 }} -->
+          <input type="radio" name="answer" value="6" style="display: none;"> <!-- MUI: Radio (hidden) -->
+          <span> <!-- MUI: Typography variant="body1" fontWeight="medium" -->
+            だいたいできます
+          </span>
+        </label>
+
+        <label class="choice-card"> <!-- MUI: Paper variant="outlined" sx={{ borderRadius: 3, p: 3 }} -->
+          <input type="radio" name="answer" value="3" style="display: none;"> <!-- MUI: Radio (hidden) -->
+          <span> <!-- MUI: Typography variant="body1" fontWeight="medium" -->
+            あまりできません
+          </span>
+        </label>
+
+        <label class="choice-card"> <!-- MUI: Paper variant="outlined" sx={{ borderRadius: 3, p: 3 }} -->
+          <input type="radio" name="answer" value="0" style="display: none;"> <!-- MUI: Radio (hidden) -->
+          <span> <!-- MUI: Typography variant="body1" fontWeight="medium" -->
+            できません
+          </span>
+        </label>
+
+      </div>
+    </div>
+
+    <!-- ナビゲーションボタン -->
+    <div style="display: flex; gap: 16px;"> <!-- MUI: Stack direction="row" spacing={2} -->
+      <button
+        id="back-button"
+        onclick="previousQuestion()"
+        style="
+          flex: 1;
+          padding: 14px 20px;
+          background: white;
+          color: #1976d2; /* theme.palette.primary.main */
+          border: 2px solid #e3f2fd;
+          border-radius: 10px;
+          font-size: 1rem;
+          font-weight: 500;
+          cursor: pointer;
+          text-transform: none;
+          letter-spacing: 0.01em;
+          transition: all 0.2s ease;
+        "
+        onmouseover="this.style.borderColor='#90caf9'; this.style.background='#f3f9ff';"
+        onmouseout="this.style.borderColor='#e3f2fd'; this.style.background='white';">
+        <!-- MUI: Button variant="outlined" color="primary" fullWidth sx={{ borderRadius: 2.5 }} -->
+        戻る
+      </button>
+
+      <button
+        id="next-button"
+        onclick="nextQuestion()"
+        disabled
+        style="
+          flex: 1;
+          padding: 14px 20px;
+          background: linear-gradient(135deg, #42a5f5 0%, #1976d2 100%); /* theme.palette.primary グラデーション */
+          color: white;
+          border: none;
+          border-radius: 10px;
+          font-size: 1rem;
+          font-weight: 500;
+          cursor: pointer;
+          text-transform: none;
+          letter-spacing: 0.01em;
+          box-shadow: 0px 4px 12px rgba(25, 118, 210, 0.3);
+          transition: all 0.2s ease;
+        "
+        onmouseover="if(!this.disabled) { this.style.transform='translateY(-2px)'; this.style.boxShadow='0px 6px 16px rgba(25, 118, 210, 0.4)'; }"
+        onmouseout="if(!this.disabled) { this.style.transform='translateY(0)'; this.style.boxShadow='0px 4px 12px rgba(25, 118, 210, 0.3)'; }">
+        <!-- MUI: Button variant="contained" color="primary" fullWidth sx={{ borderRadius: 2.5 }} -->
+        次へ
+      </button>
+    </div>
+
+  </div>
+
+  <!-- ========== 画面3: 完了画面 ========== -->
+  <div id="screen-complete" class="hidden" style="max-width: 600px; margin: 0 auto; padding: 32px 16px; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 60vh;"> <!-- MUI: Container maxWidth="sm" p={2} py={4} -->
+
+    <div style="text-align: center;"> <!-- MUI: Box textAlign="center" -->
+
+      <!-- やさしい雰囲気のイラスト（ドキュメントアイコン） -->
+      <div style="font-size: 80px; margin-bottom: 24px; opacity: 0.9;">📋</div>
+
+      <h4 style="font-size: 1.75rem; font-weight: 400; line-height: 1.4; margin-bottom: 16px; color: #2c3e50;"> <!-- MUI: Typography variant="h4" mb={2} -->
+        おつかれさまでした！
+      </h4>
+      <p style="font-size: 1.125rem; line-height: 1.7; color: #546e7a; margin-bottom: 32px;"> <!-- MUI: Typography variant="body1" color="text.secondary" -->
+        あなたの診断結果をまとめています...
+      </p>
+
+      <!-- ロードアニメーション（3つの点が順番に表示） -->
+      <div class="loading-dots" style="display: flex; gap: 8px; justify-content: center;">
+        <div class="dot" style="width: 12px; height: 12px; background: #1976d2; border-radius: 50%; animation: pulse 1.4s infinite ease-in-out;"></div>
+        <div class="dot" style="width: 12px; height: 12px; background: #1976d2; border-radius: 50%; animation: pulse 1.4s infinite ease-in-out 0.2s;"></div>
+        <div class="dot" style="width: 12px; height: 12px; background: #1976d2; border-radius: 50%; animation: pulse 1.4s infinite ease-in-out 0.4s;"></div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <script>
+    /**
+     * 📝 全12問の質問文
+     *
+     * 【設計力】
+     * Q1. あなたは発信を「どんな人」に届けたいか説明できますか？
+     * Q2. あなたの投稿で、フォロワーは何を得られるかを3つ説明できますか？
+     * Q3. 他の発信者との違いを、一言で説明できますか？
+     *
+     * 【量産力】
+     * Q4. 今すぐ投稿しようと思ったとき、迷わずネタを出せますか？
+     * Q5. 投稿を作るとき、使っている型（テンプレート）はありますか？
+     * Q6. 1つの投稿を、負担なく短時間で作れていますか？
+     *
+     * 【改善力】
+     * Q7. 投稿後、数値を習慣的に確認していますか？
+     * Q8. 数値を見て、なぜ伸びたか／伸びなかったかを説明できますか？
+     * Q9. 伸びた投稿を意図的に再現していますか？
+     *
+     * 【事業力】
+     * Q10. Threadsから案内できる商品・サービスがありますか？
+     * Q11. Threadsから商品までの導線は整っていますか？
+     * Q12. Threadsをきっかけに、実際に売上が発生したことはありますか？
+     */
+
+    // 簡易的な画面遷移デモ
+    let currentQuestion = 1;
+    const totalQuestions = 12;
+
+    /**
+     * カード全体がクリック可能に（labelとfor属性で自動的に連携）
+     * カード全体のクリック時、またはチェックボックス変更時にスタイル更新
+     * React実装時: useState で checked 状態を管理し、クラス名を動的に付与
+     */
+    function toggleConsentStyle() {
+      // label要素のfor属性によりカード全体がチェックボックスと連携
+      // クリック後の状態を反映するため、setTimeoutで次のTickで処理
+      setTimeout(() => {
+        const checkbox = document.getElementById('agree-checkbox');
+        const card = document.getElementById('consent-card');
+
+        // checked状態に応じてクラスを付け替え
+        if (checkbox.checked) {
+          card.classList.add('consent-checked');
+        } else {
+          card.classList.remove('consent-checked');
+        }
+      }, 0);
+    }
+
+    function startDiagnosis() {
+      const checkbox = document.getElementById('agree-checkbox');
+      if (!checkbox.checked) {
+        alert('同意チェックが必要です');
+        return;
+      }
+      document.getElementById('screen-start').classList.add('hidden');
+      document.getElementById('screen-question').classList.remove('hidden');
+      updateProgress();
+    }
+
+    function nextQuestion() {
+      if (currentQuestion < totalQuestions) {
+        currentQuestion++;
+        updateProgress();
+        // 選択解除
+        document.querySelectorAll('input[name="answer"]').forEach(input => {
+          input.checked = false;
+        });
+        // 選択カードのスタイルをリセット
+        document.querySelectorAll('.choice-card').forEach(card => {
+          card.classList.remove('selected');
+        });
+        document.getElementById('next-button').disabled = true;
+      } else {
+        // 診断完了
+        document.getElementById('screen-question').classList.add('hidden');
+        document.getElementById('screen-complete').classList.remove('hidden');
+
+        // 1.5秒後に自動遷移
+        setTimeout(() => {
+          viewResult();
+        }, 1500);
+      }
+    }
+
+    function previousQuestion() {
+      if (currentQuestion > 1) {
+        currentQuestion--;
+        updateProgress();
+      }
+    }
+
+    function updateProgress() {
+      const percent = Math.round((currentQuestion / totalQuestions) * 100);
+      const remaining = totalQuestions - currentQuestion;
+      document.getElementById('current-question').textContent = currentQuestion;
+      document.getElementById('remaining-questions').textContent = remaining;
+      document.getElementById('progress-bar').style.width = percent + '%';
+
+      // 戻るボタンの表示制御
+      document.getElementById('back-button').style.display = currentQuestion === 1 ? 'none' : 'flex';
+    }
+
+    function viewResult() {
+      alert('結果ページに遷移します（P-002）');
+    }
+
+    // ラジオボタン選択時に次へボタンを有効化 & 選択カードのスタイル変更
+    document.addEventListener('DOMContentLoaded', () => {
+      document.querySelectorAll('input[name="answer"]').forEach(input => {
+        input.addEventListener('change', (e) => {
+          // 次へボタン有効化
+          document.getElementById('next-button').disabled = false;
+
+          // 全カードから選択状態を削除
+          document.querySelectorAll('.choice-card').forEach(card => {
+            card.classList.remove('selected');
+          });
+
+          // 選択されたカードに選択状態を追加
+          e.target.closest('.choice-card').classList.add('selected');
+        });
+      });
+
+      // 初期状態で戻るボタンを非表示
+      document.getElementById('back-button').style.display = 'none';
+    });
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>診断結果 - Threads運用診断</title>
+
+  <!-- Material UI Fonts -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap"/>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons"/>
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Roboto', sans-serif;
+      font-size: 17px;
+      color: rgba(0, 0, 0, 0.87);
+      background: linear-gradient(to bottom, #f5f9fc 0%, #fefefe 100%);
+      min-height: 100vh;
+      line-height: 2.0;
+    }
+
+    /* ボタンホバー効果 */
+    .button-hover {
+      transition: all 0.2s ease;
+    }
+    .button-hover:hover {
+      background-color: #e8f3fa !important;
+      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+    }
+
+    /* 特典ボタンホバー効果 */
+    .button-hover-benefit {
+      transition: all 0.2s ease;
+    }
+    .button-hover-benefit:hover {
+      background-color: #fff0e6 !important;
+      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+    }
+  </style>
+</head>
+<body>
+  <!--
+    📌 MUI変換マッピング表
+    このHTMLモックアップは以下のMUIコンポーネントに変換されます：
+
+    - <h2> → <Typography variant="h4">
+    - <h3> → <Typography variant="h5">
+    - <h4> → <Typography variant="h6">
+    - <p> → <Typography variant="body1">
+    - <button> → <Button variant="contained">
+    - margin/padding: spacing()基準（8px単位）
+    - 色: theme.palette基準
+  -->
+
+  <!-- コンテンツ開始 -->
+  <div style="max-width: 800px; margin: 0 auto; padding: 24px;"> <!-- MUI: Container maxWidth="md" p={3} -->
+
+    <!-- スクショ推奨案内 -->
+    <div style="background: #fff; border-radius: 16px; padding: 20px; margin-bottom: 32px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); border: 1px solid #f5f5f5;"> <!-- MUI: Paper elevation={0} borderRadius={4} p={2.5} mb={4} sx={{boxShadow: '0 2px 8px rgba(0,0,0,0.05)'}} -->
+      <p style="font-size: 15px; color: rgba(0, 0, 0, 0.5); text-align: center;"> <!-- MUI: Typography variant="body2" color="text.secondary" textAlign="center" -->
+        📸 診断結果はこのページだけで表示されます。スクリーンショットで保存しておくと便利です。
+      </p>
+    </div>
+
+    <!-- タイプ判定（表紙として表示：カードUI廃止） -->
+    <div style="padding: 60px 32px 48px; margin-bottom: 48px; text-align: center; background: transparent;"> <!-- MUI: Box pt={7.5} pb={6} px={4} mb={6} textAlign="center" -->
+
+      <h2 style="font-size: 32px; font-weight: 500; margin-bottom: 16px; color: rgba(0, 0, 0, 0.85);"> <!-- MUI: Typography variant="h3" mb={2} fontWeight={500} -->
+        しんどいタイプ
+      </h2>
+
+      <!-- アクセント線 -->
+      <div style="width: 80px; height: 2px; background: #5a9fd4; margin: 16px auto;"></div> <!-- MUI: Box width={80} height={2} bgcolor="#5a9fd4" mx="auto" my={2} -->
+
+      <p style="font-size: 18px; color: rgba(0, 0, 0, 0.6); margin-bottom: 16px; line-height: 2.2; max-width: 600px; margin-left: auto; margin-right: auto;"> <!-- MUI: Typography variant="body1" color="text.secondary" mb={2} lineHeight={2.2} fontSize={18} maxWidth={600} mx="auto" -->
+        頑張りたい気持ちはあるのに、続ける仕組みがまだ整っていない状態です。
+      </p>
+
+      <p style="font-size: 15px; color: #5a6a7a; margin-top: 16px; margin-bottom: 40px; max-width: 600px; margin-left: auto; margin-right: auto;"> <!-- MUI: Typography fontSize={15} color="#5a6a7a" mt={2} mb={5} maxWidth={600} mx="auto" -->
+        あなたの頑張り方が悪いわけではありません。
+      </p>
+
+      <!-- 100点満点スコア（補助情報として小さく薄く） -->
+      <div style="margin-bottom: 0;"> <!-- MUI: Box mb={0} -->
+        <p style="font-size: 13px; color: rgba(0, 0, 0, 0.3);"> <!-- MUI: Typography variant="caption" color="text.disabled" opacity={0.8} -->
+          総合スコア：72 / 100
+        </p>
+      </div>
+    </div>
+
+    <!-- 4軸レーダーチャート -->
+    <div style="background: #fff; border-radius: 16px; padding: 40px 32px; margin-bottom: 32px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); border: 1px solid #f5f5f5;"> <!-- MUI: Paper elevation={0} borderRadius={4} p={5,4} mb={4} sx={{boxShadow: '0 2px 8px rgba(0,0,0,0.05)'}} -->
+      <h3 style="font-size: 20px; font-weight: 400; margin-bottom: 32px; text-align: center; color: rgba(0, 0, 0, 0.75);"> <!-- MUI: Typography variant="h5" mb={4} textAlign="center" fontWeight={400} -->
+        あなたの4軸スコア
+      </h3>
+
+      <!-- レーダーチャート -->
+      <div style="width: 100%; height: 450px; display: flex; align-items: center; justify-content: center; margin-bottom: 32px;"> <!-- MUI: Box width="100%" height={450} display="flex" alignItems="center" justifyContent="center" mb={4} -->
+        <svg width="450" height="450" viewBox="0 0 450 450" style="margin: 0 auto; display: block;">
+          <!-- 背景円（目盛り） -->
+          <circle cx="225" cy="225" r="170" fill="none" stroke="#f0f0f0" stroke-width="1"/>
+          <circle cx="225" cy="225" r="113" fill="none" stroke="#f0f0f0" stroke-width="1"/>
+          <circle cx="225" cy="225" r="56" fill="none" stroke="#f0f0f0" stroke-width="1"/>
+
+          <!-- 軸線（4本） -->
+          <line x1="225" y1="225" x2="225" y2="55" stroke="#e0e0e0" stroke-width="1" stroke-linecap="round"/>
+          <line x1="225" y1="225" x2="395" y2="225" stroke="#e0e0e0" stroke-width="1" stroke-linecap="round"/>
+          <line x1="225" y1="225" x2="225" y2="395" stroke="#e0e0e0" stroke-width="1" stroke-linecap="round"/>
+          <line x1="225" y1="225" x2="55" y2="225" stroke="#e0e0e0" stroke-width="1" stroke-linecap="round"/>
+
+          <!-- データポリゴン（設計力83, 量産力25, 改善力79, 事業力88） -->
+          <!-- 設計力(上): 83/100 = 170*0.83 = 141.1 → y: 225-141.1 = 83.9 -->
+          <!-- 量産力(右): 25/100 = 170*0.25 = 42.5 → x: 225+42.5 = 267.5 -->
+          <!-- 改善力(下): 79/100 = 170*0.79 = 134.3 → y: 225+134.3 = 359.3 -->
+          <!-- 事業力(左): 88/100 = 170*0.88 = 149.6 → x: 225-149.6 = 75.4 -->
+          <polygon points="225,83.9 267.5,225 225,359.3 75.4,225"
+                   fill="rgba(90, 159, 212, 0.15)"
+                   stroke="#5a9fd4"
+                   stroke-width="2.5"
+                   stroke-linecap="round"
+                   stroke-linejoin="round"/>
+
+          <!-- データポイント -->
+          <!-- React実装時: ホバー時にその軸を強調し、他を少し薄くする -->
+          <circle cx="225" cy="83.9" r="5" fill="#5a9fd4"/> <!-- 設計力 -->
+          <circle cx="267.5" cy="225" r="5" fill="#d9a88a"/> <!-- 量産力（くすんだオレンジ） -->
+          <circle cx="225" cy="359.3" r="5" fill="#5a9fd4"/> <!-- 改善力 -->
+          <circle cx="75.4" cy="225" r="5" fill="#5a9fd4"/> <!-- 事業力 -->
+
+          <!-- 軸ラベル -->
+          <text x="225" y="40" text-anchor="middle" font-size="15" font-weight="500" fill="#666">設計力</text>
+          <text x="415" y="230" text-anchor="start" font-size="15" font-weight="500" fill="#666">量産力</text>
+          <text x="225" y="430" text-anchor="middle" font-size="15" font-weight="500" fill="#666">改善力</text>
+          <text x="35" y="230" text-anchor="end" font-size="15" font-weight="500" fill="#666">事業力</text>
+        </svg>
+      </div>
+
+      <!-- 4軸スコア詳細（文章寄りの表現） -->
+      <div style="display: grid; grid-template-columns: 1fr; gap: 24px;"> <!-- MUI: Grid container spacing={3} -->
+
+        <div style="padding: 20px; background: #f0f6fa; border-radius: 16px;"> <!-- MUI: Box p={2.5} bgcolor="#f0f6fa" borderRadius={4} -->
+          <p style="font-size: 15px; font-weight: 500; color: #5a9fd4; margin-bottom: 8px;"> <!-- MUI: Typography variant="body2" fontWeight={500} color="#5a9fd4" mb={1} -->
+            設計力
+          </p>
+          <p style="font-size: 17px; color: rgba(0, 0, 0, 0.75); line-height: 2.0;"> <!-- MUI: Typography variant="body1" color="text.primary" lineHeight={2.0} fontSize={17} -->
+            考え方はとても整理されています。あとは"続ける形"があれば十分です。<span style="color: rgba(0, 0, 0, 0.4); font-size: 15px;">（83）</span>
+          </p>
+        </div>
+
+        <div style="padding: 20px; background: #fff5ed; border-radius: 16px;"> <!-- MUI: Box p={2.5} bgcolor="#fff5ed" borderRadius={4} -->
+          <p style="font-size: 15px; font-weight: 500; color: #d9a88a; margin-bottom: 8px;"> <!-- MUI: Typography variant="body2" fontWeight={500} color="#d9a88a" mb={1} -->
+            量産力
+          </p>
+          <p style="font-size: 17px; color: #d9a88a; line-height: 2.0;"> <!-- MUI: Typography variant="body1" color="#d9a88a" lineHeight={2.0} fontSize={17} -->
+            ここが一番しんどさを感じやすい場所です。あなたの努力が消耗しやすくなっています。<span style="color: rgba(0, 0, 0, 0.4); font-size: 15px;">（25）</span>
+          </p>
+        </div>
+
+        <div style="padding: 20px; background: #f0f6fa; border-radius: 16px;"> <!-- MUI: Box p={2.5} bgcolor="#f0f6fa" borderRadius={4} -->
+          <p style="font-size: 15px; font-weight: 500; color: #5a9fd4; margin-bottom: 8px;"> <!-- MUI: Typography variant="body2" fontWeight={500} color="#5a9fd4" mb={1} -->
+            改善力
+          </p>
+          <p style="font-size: 17px; color: rgba(0, 0, 0, 0.75); line-height: 2.0;"> <!-- MUI: Typography variant="body1" color="text.primary" lineHeight={2.0} fontSize={17} -->
+            感覚はすでにあります。仕組みがあれば、かなり強くなります。<span style="color: rgba(0, 0, 0, 0.4); font-size: 15px;">（79）</span>
+          </p>
+        </div>
+
+        <div style="padding: 20px; background: #f0f6fa; border-radius: 16px;"> <!-- MUI: Box p={2.5} bgcolor="#f0f6fa" borderRadius={4} -->
+          <p style="font-size: 15px; font-weight: 500; color: #5a9fd4; margin-bottom: 8px;"> <!-- MUI: Typography variant="body2" fontWeight={500} color="#5a9fd4" mb={1} -->
+            事業力
+          </p>
+          <p style="font-size: 17px; color: rgba(0, 0, 0, 0.75); line-height: 2.0;"> <!-- MUI: Typography variant="body1" color="text.primary" lineHeight={2.0} fontSize={17} -->
+            全体を支える土台はもうできています。<span style="color: rgba(0, 0, 0, 0.4); font-size: 15px;">（88）</span>
+          </p>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- カスタムメッセージ -->
+    <div style="background: #f8fbfd; border-radius: 16px; padding: 40px 32px; margin-bottom: 32px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); border: 1px solid #e8f2f8;"> <!-- MUI: Paper elevation={0} borderRadius={4} p={5,4} mb={4} sx={{background: '#f8fbfd', boxShadow: '0 2px 8px rgba(0,0,0,0.05)'}} -->
+      <h3 style="font-size: 20px; font-weight: 400; margin-bottom: 32px; color: rgba(0, 0, 0, 0.75);"> <!-- MUI: Typography variant="h5" mb={4} fontWeight={400} -->
+        🔍 今のあなたの状態を、言葉にすると
+      </h3>
+
+      <!-- 文章ブロック形式（左側に色ライン） -->
+      <div style="padding-left: 20px; border-left: 3px solid #b8d4e8; margin-bottom: 28px;"> <!-- MUI: Box pl={2.5} borderLeft="3px solid #b8d4e8" mb={3.5} -->
+        <p style="font-size: 17px; line-height: 2.0; color: rgba(0, 0, 0, 0.7);"> <!-- MUI: Typography variant="body1" lineHeight={2.0} fontSize={17} color="text.primary" -->
+          今のあなたは、頑張る力はあるのに、それを支える仕組みがまだない状態かもしれません。
+        </p>
+      </div>
+
+      <div style="padding-left: 20px; border-left: 3px solid #b8d4e8; margin-bottom: 28px;"> <!-- MUI: Box pl={2.5} borderLeft="3px solid #b8d4e8" mb={3.5} -->
+        <p style="font-size: 17px; line-height: 2.0; color: rgba(0, 0, 0, 0.7);"> <!-- MUI: Typography variant="body1" lineHeight={2.0} fontSize={17} color="text.primary" -->
+          だからこそ、疲れやすくなったり、続けるのがしんどく感じやすくなります。
+        </p>
+      </div>
+
+      <div style="padding-left: 20px; border-left: 3px solid #b8d4e8;"> <!-- MUI: Box pl={2.5} borderLeft="3px solid #b8d4e8" -->
+        <p style="font-size: 17px; line-height: 2.0; color: rgba(0, 0, 0, 0.7);"> <!-- MUI: Typography variant="body1" lineHeight={2.0} fontSize={17} color="text.primary" -->
+          でも、型やストックが少しずつ整えば、今よりずっと楽になります。
+        </p>
+      </div>
+    </div>
+
+    <!-- 次の一手 -->
+    <div style="background: #fff; border-radius: 16px; padding: 40px 32px; margin-bottom: 32px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); border: 1px solid #f5f5f5;"> <!-- MUI: Paper elevation={0} borderRadius={4} p={5,4} mb={4} sx={{boxShadow: '0 2px 8px rgba(0,0,0,0.05)'}} -->
+      <h3 style="font-size: 20px; font-weight: 400; margin-bottom: 16px; color: rgba(0, 0, 0, 0.75);"> <!-- MUI: Typography variant="h5" mb={2} fontWeight={400} -->
+        🚶‍♀️ これからの一歩
+      </h3>
+
+      <p style="font-size: 16px; color: #5a6a7a; font-weight: 500; margin-bottom: 32px;"> <!-- MUI: Typography fontSize={16} color="#5a6a7a" fontWeight={500} mb={4} -->
+        いきなり全部変えなくて大丈夫です。
+      </p>
+
+      <!-- まずできそうなこと -->
+      <div style="margin-bottom: 32px;"> <!-- MUI: Box mb={4} -->
+        <h4 style="font-size: 16px; font-weight: 500; color: rgba(0, 0, 0, 0.6); margin-bottom: 12px;"> <!-- MUI: Typography variant="h6" fontWeight={500} color="text.secondary" mb={1.5} -->
+          🟢 まずできそうなこと
+        </h4>
+        <p style="font-size: 17px; line-height: 2.0; color: rgba(0, 0, 0, 0.7);"> <!-- MUI: Typography variant="body1" lineHeight={2.0} fontSize={17} color="text.primary" -->
+          最近の投稿を3つ見返して、反応がよかったテーマを1つメモするだけで大丈夫です。
+        </p>
+      </div>
+
+      <!-- 少し慣れたら -->
+      <div style="margin-bottom: 32px;"> <!-- MUI: Box mb={4} -->
+        <h4 style="font-size: 16px; font-weight: 500; color: rgba(0, 0, 0, 0.6); margin-bottom: 12px;"> <!-- MUI: Typography variant="h6" fontWeight={500} color="text.secondary" mb={1.5} -->
+          🔵 少し慣れたら
+        </h4>
+        <p style="font-size: 17px; line-height: 2.0; color: rgba(0, 0, 0, 0.7);"> <!-- MUI: Typography variant="body1" lineHeight={2.0} fontSize={17} color="text.primary" -->
+          型を1つ作って、同じ形で5回投稿してみてください。
+        </p>
+      </div>
+
+      <!-- 余裕が出てきたら -->
+      <div> <!-- MUI: Box -->
+        <h4 style="font-size: 16px; font-weight: 500; color: rgba(0, 0, 0, 0.6); margin-bottom: 12px;"> <!-- MUI: Typography variant="h6" fontWeight={500} color="text.secondary" mb={1.5} -->
+          🟣 余裕が出てきたら
+        </h4>
+        <p style="font-size: 17px; line-height: 2.0; color: rgba(0, 0, 0, 0.7);"> <!-- MUI: Typography variant="body1" lineHeight={2.0} fontSize={17} color="text.primary" -->
+          ネタストックを少しずつ増やして、週5回投稿できる仕組みを整えてみてください。
+        </p>
+      </div>
+    </div>
+
+    <!-- 商品提案CTA -->
+    <div style="background: #f4f9fd; border-radius: 16px; padding: 32px; margin-bottom: 32px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); border: 1px solid #d5e6f2; text-align: center;"> <!-- MUI: Paper elevation={0} borderRadius={4} p={4} mb={4} textAlign="center" sx={{background: '#f4f9fd', border: '1px solid #d5e6f2', boxShadow: '0 2px 8px rgba(0,0,0,0.05)'}} -->
+      <!-- ✨ 絵文字単体 -->
+      <div style="text-align: center; margin-bottom: 16px;"> <!-- MUI: Box textAlign="center" mb={2} -->
+        <span style="font-size: 32px;">✨</span>
+      </div>
+
+      <h3 style="font-size: 19px; font-weight: 400; margin-bottom: 20px; color: rgba(0, 0, 0, 0.65);"> <!-- MUI: Typography variant="h5" fontSize={19} mb={2.5} fontWeight={400} color="text.secondary" -->
+        頑張り続けなくても、続けられる形があります。
+      </h3>
+
+      <p style="font-size: 14px; color: #7a8a9a; margin-top: 16px; margin-bottom: 32px; line-height: 2.0;"> <!-- MUI: Typography fontSize={14} color="#7a8a9a" mt={2} mb={4} lineHeight={2.0} -->
+        無理に選ばなくて大丈夫です。今は"知っておくだけ"で十分です。
+      </p>
+
+      <button
+        class="button-hover"
+        style="
+          width: 100%;
+          max-width: 400px;
+          padding: 14px 32px;
+          background: #ffffff;
+          color: #5a9fd4;
+          border: 2px solid #5a9fd4;
+          border-radius: 12px;
+          font-size: 16px;
+          font-weight: 400;
+          cursor: pointer;
+          text-transform: none;
+          margin: 0 auto;
+          display: block;
+          margin-bottom: 16px;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        ">
+        <!-- MUI: Button variant="outlined" color="primary" size="large" fullWidth sx={{ maxWidth: 400, mb: 2, bgcolor: '#ffffff', boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }} -->
+        仕組み化の選択肢を見てみる
+      </button>
+
+      <p style="font-size: 13px; color: rgba(0, 0, 0, 0.4); text-align: center;"> <!-- MUI: Typography variant="caption" color="text.disabled" textAlign="center" -->
+        ※ 別タブで商品ページを開きます
+      </p>
+    </div>
+
+    <!-- 特典登録 -->
+    <div style="background: #fff8f4; border-radius: 16px; padding: 32px; margin-bottom: 32px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); text-align: center; border: 1px solid #f0dbc8;"> <!-- MUI: Paper elevation={0} borderRadius={4} p={4} mb={4} textAlign="center" sx={{background: '#fff8f4', border: '1px solid #f0dbc8', boxShadow: '0 2px 8px rgba(0,0,0,0.06)'}} -->
+      <h3 style="font-size: 19px; font-weight: 400; margin-bottom: 20px; color: rgba(0, 0, 0, 0.65);"> <!-- MUI: Typography variant="h5" fontSize={19} mb={2.5} fontWeight={400} color="text.secondary" -->
+        🎁 無料特典を受け取る
+      </h3>
+
+      <p style="font-size: 17px; color: rgba(0, 0, 0, 0.6); margin-bottom: 32px; line-height: 2.0;"> <!-- MUI: Typography variant="body1" color="text.secondary" mb={4} lineHeight={2.0} fontSize={17} -->
+        <strong style="color: rgba(0, 0, 0, 0.75);">Threads運用 7日間リセット設計シート</strong><br>
+        （PDF + Googleスプレッドシート）
+      </p>
+
+      <button
+        class="button-hover-benefit"
+        style="
+          width: 100%;
+          max-width: 400px;
+          padding: 14px 32px;
+          background: #ffffff;
+          color: #5a9fd4;
+          border: 2px solid #5a9fd4;
+          border-radius: 12px;
+          font-size: 16px;
+          font-weight: 400;
+          cursor: pointer;
+          text-transform: none;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        ">
+        <!-- MUI: Button variant="outlined" color="primary" size="large" fullWidth sx={{ maxWidth: 400, bgcolor: '#ffffff', boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }} -->
+        特典を受け取る
+      </button>
+
+      <p style="font-size: 13px; color: rgba(0, 0, 0, 0.4); margin-top: 16px;"> <!-- MUI: Typography variant="caption" color="text.disabled" mt={2} -->
+        ※ 登録フォームに移動します（別タブ）
+      </p>
+    </div>
+
+  </div>
+  <!-- コンテンツ終了 -->
+
+</body>
+</html>
