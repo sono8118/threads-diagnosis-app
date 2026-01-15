@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>本番運用レベル診断レポート - Threads運用診断アプリ</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #f5f7fa;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+
+        header h1 {
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+
+        header p {
+            font-size: 16px;
+            opacity: 0.9;
+        }
+
+        .score-summary {
+            padding: 40px;
+            text-align: center;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        }
+
+        .total-score {
+            font-size: 72px;
+            font-weight: bold;
+            color: #667eea;
+            margin: 20px 0;
+        }
+
+        .grade {
+            font-size: 48px;
+            font-weight: bold;
+            color: #f39c12;
+            margin: 10px 0;
+        }
+
+        .grade-description {
+            font-size: 20px;
+            color: #555;
+            margin-top: 10px;
+        }
+
+        .categories {
+            padding: 40px;
+        }
+
+        .category {
+            margin-bottom: 40px;
+            padding: 30px;
+            background: #f8f9fa;
+            border-radius: 12px;
+            border-left: 6px solid #667eea;
+        }
+
+        .category-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .category-title {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .category-score {
+            font-size: 32px;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .category.excellent { border-left-color: #27ae60; }
+        .category.excellent .category-score { color: #27ae60; }
+
+        .category.good { border-left-color: #3498db; }
+        .category.good .category-score { color: #3498db; }
+
+        .category.fair { border-left-color: #f39c12; }
+        .category.fair .category-score { color: #f39c12; }
+
+        .category.poor { border-left-color: #e74c3c; }
+        .category.poor .category-score { color: #e74c3c; }
+
+        .progress-bar {
+            width: 100%;
+            height: 12px;
+            background: #e0e0e0;
+            border-radius: 6px;
+            overflow: hidden;
+            margin: 15px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            transition: width 0.3s ease;
+        }
+
+        .category.excellent .progress-fill { background: linear-gradient(90deg, #27ae60 0%, #2ecc71 100%); }
+        .category.good .progress-fill { background: linear-gradient(90deg, #3498db 0%, #5dade2 100%); }
+        .category.fair .progress-fill { background: linear-gradient(90deg, #f39c12 0%, #f8c471 100%); }
+        .category.poor .progress-fill { background: linear-gradient(90deg, #e74c3c 0%, #ec7063 100%); }
+
+        .details {
+            margin-top: 20px;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+        }
+
+        .details h4 {
+            font-size: 18px;
+            margin-bottom: 15px;
+            color: #555;
+        }
+
+        .details ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .details li {
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .details li:last-child {
+            border-bottom: none;
+        }
+
+        .status-icon {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+
+        .status-icon.pass { background: #27ae60; }
+        .status-icon.fail { background: #e74c3c; }
+        .status-icon.warn { background: #f39c12; }
+
+        .issues {
+            padding: 40px;
+            background: #fff5f5;
+        }
+
+        .issues h2 {
+            font-size: 28px;
+            color: #e74c3c;
+            margin-bottom: 30px;
+        }
+
+        .issue {
+            margin-bottom: 30px;
+            padding: 25px;
+            background: white;
+            border-radius: 8px;
+            border-left: 4px solid #e74c3c;
+        }
+
+        .issue.high { border-left-color: #f39c12; }
+
+        .issue-title {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .issue-severity {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+            color: white;
+            margin-bottom: 15px;
+        }
+
+        .issue-severity.critical { background: #e74c3c; }
+        .issue-severity.high { background: #f39c12; }
+
+        .issue-description {
+            margin: 15px 0;
+            color: #555;
+            line-height: 1.8;
+        }
+
+        .recommendations {
+            padding: 40px;
+        }
+
+        .recommendations h2 {
+            font-size: 28px;
+            color: #667eea;
+            margin-bottom: 30px;
+        }
+
+        .recommendation {
+            margin-bottom: 20px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+
+        .recommendation-title {
+            font-weight: bold;
+            font-size: 18px;
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .recommendation-time {
+            display: inline-block;
+            padding: 4px 12px;
+            background: #667eea;
+            color: white;
+            border-radius: 4px;
+            font-size: 12px;
+            margin-bottom: 10px;
+        }
+
+        footer {
+            padding: 30px 40px;
+            background: #2c3e50;
+            color: white;
+            text-align: center;
+        }
+
+        footer p {
+            margin: 5px 0;
+            opacity: 0.9;
+        }
+
+        .highlight {
+            padding: 30px;
+            margin: 30px 40px;
+            background: #e8f5e9;
+            border-radius: 8px;
+            border-left: 4px solid #27ae60;
+        }
+
+        .highlight h3 {
+            font-size: 22px;
+            color: #27ae60;
+            margin-bottom: 15px;
+        }
+
+        .highlight ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .highlight li {
+            padding: 8px 0;
+            padding-left: 30px;
+            position: relative;
+        }
+
+        .highlight li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #27ae60;
+            font-weight: bold;
+            font-size: 20px;
+        }
+
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+
+            .container {
+                box-shadow: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>本番運用レベル診断レポート</h1>
+            <p>Threads運用診断アプリ（MVP）</p>
+            <p>診断日時: 2026-01-15</p>
+        </header>
+
+        <div class="score-summary">
+            <h2>総合スコア</h2>
+            <div class="total-score">87<span style="font-size: 48px; color: #555;">/100</span></div>
+            <div class="grade">B</div>
+            <div class="grade-description">Good - 軽微な改善後に本番運用可能</div>
+        </div>
+
+        <div class="categories">
+            <div class="category excellent">
+                <div class="category-header">
+                    <div class="category-title">🔒 セキュリティ（CVSS 3.1準拠）</div>
+                    <div class="category-score">30/30</div>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 100%;"></div>
+                </div>
+                <div class="details">
+                    <h4>評価詳細</h4>
+                    <ul>
+                        <li><span class="status-icon pass"></span>CVSS脆弱性評価: 15/15点（Critical/High: 0件）</li>
+                        <li><span class="status-icon pass"></span>認証・認可: 8/8点（MVP適切設計）</li>
+                        <li><span class="status-icon pass"></span>ライセンス確認: 4/4点（全127パッケージ商用可）</li>
+                        <li><span class="status-icon pass"></span>セキュリティヘッダー: 3/3点（Vercel自動設定）</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="category excellent">
+                <div class="category-header">
+                    <div class="category-title">⚡ パフォーマンス</div>
+                    <div class="category-score">20/20</div>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 100%;"></div>
+                </div>
+                <div class="details">
+                    <h4>評価詳細</h4>
+                    <ul>
+                        <li><span class="status-icon pass"></span>データベース最適化: 8/8点（該当なし）</li>
+                        <li><span class="status-icon pass"></span>N+1問題検出: 4/4点（該当なし）</li>
+                        <li><span class="status-icon pass"></span>キャッシング戦略: 4/4点（useMemo/useCallback適切）</li>
+                        <li><span class="status-icon pass"></span>バンドルサイズ: 4/4点（0.95MB、1MB未満）</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="category fair">
+                <div class="category-header">
+                    <div class="category-title">🛡️ 信頼性（Google SRE準拠）</div>
+                    <div class="category-score">14/20</div>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 70%;"></div>
+                </div>
+                <div class="details">
+                    <h4>評価詳細</h4>
+                    <ul>
+                        <li><span class="status-icon warn"></span>障害回復力: 4/6点（Unhandled Rejection対策なし）</li>
+                        <li><span class="status-icon warn"></span>エラー管理: 4/6点（Error Boundary未実装）</li>
+                        <li><span class="status-icon pass"></span>トランザクション管理: 5/5点（sessionStorage安全）</li>
+                        <li><span class="status-icon warn"></span>同時実行制御: 1/3点（レースコンディション対策不足）</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="category fair">
+                <div class="category-header">
+                    <div class="category-title">🔧 運用性</div>
+                    <div class="category-score">14/20</div>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 70%;"></div>
+                </div>
+                <div class="details">
+                    <h4>評価詳細</h4>
+                    <ul>
+                        <li><span class="status-icon warn"></span>ログ管理: 4/8点（console.log 7件）</li>
+                        <li><span class="status-icon pass"></span>モニタリング設定: 6/6点（GA4実装済み）</li>
+                        <li><span class="status-icon warn"></span>デプロイ手順: 2/4点（DEPLOYMENT.md未作成）</li>
+                        <li><span class="status-icon pass"></span>バックアップ: 2/2点（該当なし）</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="category excellent">
+                <div class="category-header">
+                    <div class="category-title">📝 コード品質</div>
+                    <div class="category-score">9/10</div>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 90%;"></div>
+                </div>
+                <div class="details">
+                    <h4>評価詳細</h4>
+                    <ul>
+                        <li><span class="status-icon pass"></span>テストカバレッジ: 4/4点（71.34%、70%以上）</li>
+                        <li><span class="status-icon pass"></span>型安全性: 2/3点（any型6件、テストのみ）</li>
+                        <li><span class="status-icon warn"></span>ドキュメント: 1/2点（README.md不足）</li>
+                        <li><span class="status-icon pass"></span>コード保守性: 2/1点（重複8.03%、満点+ボーナス）</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="highlight">
+            <h3>✅ 素晴らしい点</h3>
+            <ul>
+                <li><strong>セキュリティ満点</strong>: npm audit脆弱性ゼロ、全依存パッケージが商用利用可能</li>
+                <li><strong>パフォーマンス満点</strong>: バンドル0.95MB（1MB未満）、メモ化適切使用</li>
+                <li><strong>テストカバレッジ71.34%</strong>: 70%以上の目標達成、105テスト全合格</li>
+                <li><strong>TypeScript strictモード</strong>: any型はテストコードのみ、型安全性99%</li>
+                <li><strong>コード保守性優秀</strong>: 重複8.03%（10%以下）、全関数100行以下</li>
+            </ul>
+        </div>
+
+        <div class="issues">
+            <h2>🔴 Critical問題（即座に対応 - 合計4時間）</h2>
+
+            <div class="issue">
+                <span class="issue-severity critical">CRITICAL</span>
+                <div class="issue-title">1. Error Boundary未実装</div>
+                <div class="issue-description">
+                    <strong>ファイル</strong>: frontend/src/main.tsx<br>
+                    <strong>問題</strong>: Reactコンポーネントエラーでアプリ全体がクラッシュする<br>
+                    <strong>影響</strong>: ユーザーが白い画面を見ることになり、診断が中断される<br>
+                    <strong>修正方法</strong>:
+                    <ul>
+                        <li>frontend/src/components/common/ErrorBoundary.tsx を作成</li>
+                        <li>App.tsxをError Boundaryでラップ</li>
+                        <li>フォールバックUIで「診断をやり直す」ボタン表示</li>
+                    </ul>
+                    <strong>工数</strong>: 2時間
+                </div>
+            </div>
+
+            <div class="issue">
+                <span class="issue-severity critical">CRITICAL</span>
+                <div class="issue-title">2. Unhandled Promise Rejection対策なし</div>
+                <div class="issue-description">
+                    <strong>ファイル</strong>: frontend/src/main.tsx<br>
+                    <strong>問題</strong>: Promise拒否が未処理のままクラッシュする<br>
+                    <strong>影響</strong>: 非同期処理エラーでアプリが停止する<br>
+                    <strong>修正方法</strong>:
+                    <ul>
+                        <li>window.addEventListener('unhandledrejection', ...) を追加</li>
+                        <li>エラーログ送信 + ユーザーへの通知</li>
+                    </ul>
+                    <strong>工数</strong>: 1時間
+                </div>
+            </div>
+
+            <div class="issue">
+                <span class="issue-severity critical">CRITICAL</span>
+                <div class="issue-title">3. DEPLOYMENT.md未作成</div>
+                <div class="issue-description">
+                    <strong>ファイル</strong>: /DEPLOYMENT.md（新規作成）<br>
+                    <strong>問題</strong>: デプロイ手順が文書化されていない<br>
+                    <strong>影響</strong>: 運用担当者がデプロイ方法を理解できない<br>
+                    <strong>内容</strong>:
+                    <ul>
+                        <li>Vercelデプロイ手順</li>
+                        <li>環境変数設定方法</li>
+                        <li>ビルド・テストコマンド</li>
+                        <li>トラブルシューティング</li>
+                    </ul>
+                    <strong>工数</strong>: 1時間
+                </div>
+            </div>
+
+            <h2 style="margin-top: 40px; color: #f39c12;">🟠 High問題（1週間以内 - 合計2時間）</h2>
+
+            <div class="issue high">
+                <span class="issue-severity high">HIGH</span>
+                <div class="issue-title">4. README.md充実化</div>
+                <div class="issue-description">
+                    <strong>ファイル</strong>: frontend/README.md<br>
+                    <strong>問題</strong>: Viteテンプレート初期状態のみ<br>
+                    <strong>内容追加</strong>:
+                    <ul>
+                        <li>プロジェクト概要・技術スタック</li>
+                        <li>環境構築手順</li>
+                        <li>テスト実行手順</li>
+                        <li>環境変数設定方法</li>
+                    </ul>
+                    <strong>工数</strong>: 1時間
+                </div>
+            </div>
+
+            <div class="issue high">
+                <span class="issue-severity high">HIGH</span>
+                <div class="issue-title">5. setTimeout競合防止</div>
+                <div class="issue-description">
+                    <strong>ファイル</strong>: frontend/src/pages/DiagnosisPage.tsx:154-156<br>
+                    <strong>問題</strong>: 連続クリックで複数のsetTimeoutが走る<br>
+                    <strong>修正方法</strong>:
+                    <ul>
+                        <li>useRefで処理中フラグ管理</li>
+                        <li>またはボタンdisable処理追加</li>
+                    </ul>
+                    <strong>工数</strong>: 1時間
+                </div>
+            </div>
+        </div>
+
+        <div class="recommendations">
+            <h2>📋 推奨スケジュール</h2>
+
+            <div class="recommendation">
+                <span class="recommendation-time">即日対応</span>
+                <div class="recommendation-title">Critical問題修正（4時間）</div>
+                <div class="recommendation-description">
+                    Error Boundary実装、Unhandled Rejection対策、DEPLOYMENT.md作成
+                </div>
+            </div>
+
+            <div class="recommendation">
+                <span class="recommendation-time">1週間以内</span>
+                <div class="recommendation-title">High問題修正（2時間）</div>
+                <div class="recommendation-description">
+                    README.md充実化、setTimeout競合防止
+                </div>
+            </div>
+
+            <div class="recommendation">
+                <span class="recommendation-time">1ヶ月以内</span>
+                <div class="recommendation-title">継続的改善</div>
+                <div class="recommendation-description">
+                    Sentry導入（エラー監視強化）、本番環境でのconsole.log抑制
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            <p><strong>診断基準</strong>: CVSS 3.1 / Google SRE / AWS Well-Architected</p>
+            <p><strong>評価グレード</strong>: 90-100点（A: Excellent）、75-89点（B: Good）、60-74点（C: Fair）、45-59点（D: Poor）、0-44点（F: Critical）</p>
+            <p><strong>次回診断推奨日</strong>: 2026-02-15（1ヶ月後）</p>
+            <p style="margin-top: 20px; opacity: 0.7;">Generated by 本番運用診断オーケストレーター v1.0</p>
+        </footer>
+    </div>
+</body>
+</html>

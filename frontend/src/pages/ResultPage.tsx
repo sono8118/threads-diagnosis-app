@@ -9,6 +9,14 @@ import {
 } from '@mui/material';
 import { PublicLayout } from '@/layouts/PublicLayout';
 import { RadarChartComponent } from '@/components/result/RadarChartComponent';
+import {
+  TYPE_METADATA,
+  AXIS_DESCRIPTIONS,
+  BEGINNER_AXIS_DESCRIPTIONS,
+  BALANCED_AXIS_DESCRIPTIONS,
+} from '@/constants/TYPES';
+import { generateLPUrl } from '@/utils/urlGenerator';
+import { useGA4 } from '@/hooks/useGA4';
 import type { AxisKey, DiagnosisSession } from '@/types';
 
 /**
@@ -18,6 +26,7 @@ import type { AxisKey, DiagnosisSession } from '@/types';
  */
 export const ResultPage: React.FC = () => {
   const navigate = useNavigate();
+  const { sendEvent } = useGA4();
 
   // sessionStorageから診断データを取得
   const sessionData = sessionStorage.getItem('threads_diagnosis_session');
@@ -26,8 +35,33 @@ export const ResultPage: React.FC = () => {
     // データがない場合は診断トップへリダイレクト
     if (!sessionData) {
       navigate('/');
+      return;
     }
-  }, [sessionData, navigate]);
+
+    // 結果ページ表示時にGA4イベント送信
+    const data: DiagnosisSession = JSON.parse(sessionData);
+    const totalScoreValue = Math.round(
+      (data.computedScores.design +
+        data.computedScores.production +
+        data.computedScores.improvement +
+        data.computedScores.business) /
+        4
+    );
+
+    // 結果ページ表示イベント
+    sendEvent('Result_View', {
+      diagnosis_type: data.computedType,
+      diagnosis_score: totalScoreValue,
+      timestamp: new Date().toISOString(),
+    });
+
+    // CTA表示イベント（インプレッション計測）
+    sendEvent('CTA_View', {
+      diagnosis_type: data.computedType,
+      diagnosis_score: totalScoreValue,
+      timestamp: new Date().toISOString(),
+    });
+  }, [sessionData, navigate, sendEvent]);
 
   // sessionDataがない場合は何も表示しない（リダイレクト中）
   if (!sessionData) {
@@ -36,30 +70,10 @@ export const ResultPage: React.FC = () => {
 
   // sessionDataをパース
   const data: DiagnosisSession = JSON.parse(sessionData);
-  const { computedScores, computedType } = data;
+  const { computedScores, computedType, customMessages } = data;
 
-  // タイプ名のマッピング
-  const typeNames: Record<string, string> = {
-    T1: '迷子タイプ',
-    T2: 'しんどいタイプ',
-    T3: '伸ばせるタイプ',
-    T4: 'もったいないタイプ',
-  };
-
-  // タイプ説明のマッピング
-  const typeDescriptions: Record<string, string> = {
-    T1: '方向性がまだ見えていない状態です。',
-    T2: '頑張りたい気持ちはあるのに、続ける仕組みがまだ整っていない状態です。',
-    T3: '伸びしろを感じつつ、まだ十分に活かせていない状態です。',
-    T4: 'もう少しで大きく前進できる状態です。',
-  };
-
-  const typeSubTexts: Record<string, string> = {
-    T1: '迷いながら進むのは自然なことです。',
-    T2: 'あなたの頑張り方が悪いわけではありません。',
-    T3: 'ポテンシャルはすでにあります。',
-    T4: '土台は十分に整っています。',
-  };
+  // タイプメタデータを取得
+  const typeMetadata = TYPE_METADATA[computedType];
 
   // 総合スコアを計算（平均）
   const totalScore = Math.round(
@@ -75,98 +89,93 @@ export const ResultPage: React.FC = () => {
     Object.entries(computedScores) as [AxisKey, number][]
   ).reduce((min, [key, value]) => (value < computedScores[min] ? key : min), 'design' as AxisKey);
 
-  // 軸詳細データを作成
-  const axisDetails = [
-    {
-      key: 'design',
-      label: '設計力',
-      score: computedScores.design,
-      description:
-        '考え方はとても整理されています。あとは"続ける形"があれば十分です。',
-      isLowest: lowestAxis === 'design',
-    },
-    {
-      key: 'production',
-      label: '量産力',
-      score: computedScores.production,
-      description:
-        'ここが一番しんどさを感じやすい場所です。あなたの努力が消耗しやすくなっています。',
-      isLowest: lowestAxis === 'production',
-    },
-    {
-      key: 'improvement',
-      label: '改善力',
-      score: computedScores.improvement,
-      description: '感覚はすでにあります。仕組みがあれば、かなり強くなります。',
-      isLowest: lowestAxis === 'improvement',
-    },
-    {
-      key: 'business',
-      label: '事業力',
-      score: computedScores.business,
-      description: '全体を支える土台はもうできています。',
-      isLowest: lowestAxis === 'business',
-    },
-  ];
+  // 軸詳細データを作成（動的生成、タイプ別に使用する説明を切り替え）
+  const axisDetails = (Object.keys(AXIS_DESCRIPTIONS) as AxisKey[]).map((axisKey) => {
+    let axisDescription: string;
+    let isLowest = false;
+    const score = computedScores[axisKey];
 
-  // カスタムメッセージ（モック）
-  const customMessages = [
-    '今のあなたは、頑張る力はあるのに、それを支える仕組みがまだない状態かもしれません。',
-    'だからこそ、疲れやすくなったり、続けるのがしんどく感じやすくなります。',
-    'でも、型やストックが少しずつ整えば、今よりずっと楽になります。',
-  ];
+    if (computedType === 'BEGINNER') {
+      // BEGINNER: 全軸に専用説明を使用
+      axisDescription = BEGINNER_AXIS_DESCRIPTIONS[axisKey].description;
+    } else if (computedType === 'BALANCED') {
+      // BALANCED: 全軸に専用説明を使用
+      axisDescription = BALANCED_AXIS_DESCRIPTIONS[axisKey].description;
+    } else {
+      // T1-T4: スコアと最低軸に応じて説明を切り替え
+      isLowest = lowestAxis === axisKey;
+      const axisData = AXIS_DESCRIPTIONS[axisKey];
 
-  // 次の一手（モック）
+      if (isLowest) {
+        // 最低軸: lowestDescriptionを使用
+        axisDescription = axisData.lowestDescription;
+      } else if (score < 70) {
+        // 最低軸以外で70点未満: lowScoreDescriptionを使用
+        axisDescription = axisData.lowScoreDescription;
+      } else {
+        // 最低軸以外で70点以上: 通常のdescriptionを使用
+        axisDescription = axisData.description;
+      }
+    }
+
+    return {
+      key: axisKey,
+      label: AXIS_DESCRIPTIONS[axisKey].label,
+      score: computedScores[axisKey],
+      description: axisDescription,
+      isLowest,
+    };
+  });
+
+  // 次の一手（タイプ別に動的生成）
   const nextSteps = [
     {
       emoji: '🟢',
       label: 'まずできそうなこと',
-      description:
-        '最近の投稿を3つ見返して、反応がよかったテーマを1つメモするだけで大丈夫です。',
+      description: typeMetadata.nextSteps.today,
     },
     {
       emoji: '🔵',
       label: '少し慣れたら',
-      description: '型を1つ作って、同じ形で5回投稿してみてください。',
+      description: typeMetadata.nextSteps.thisWeek,
     },
     {
       emoji: '🟣',
       label: '余裕が出てきたら',
-      description:
-        'ネタストックを少しずつ増やして、週5回投稿できる仕組みを整えてみてください。',
+      description: typeMetadata.nextSteps.thisMonth,
     },
   ];
 
-  // ホバー効果用のスタイル
-  const buttonHoverStyle = {
-    transition: 'all 0.2s ease',
-    '&:hover': {
-      backgroundColor: '#e8f3fa',
-      boxShadow: '0 3px 10px rgba(0, 0, 0, 0.08)',
-      transform: 'none',
-    },
-  };
-
-  const buttonHoverBenefitStyle = {
-    transition: 'all 0.2s ease',
-    '&:hover': {
-      backgroundColor: '#fff0e6',
-      boxShadow: '0 3px 10px rgba(0, 0, 0, 0.08)',
-      transform: 'none',
-    },
-  };
-
   const handleCTAClick = () => {
-    // @MOCK_TO_API: LP遷移（UTMパラメータ付き）
-    // 本番実装時: VITE_LP_URL環境変数から取得
-    window.open('https://example.com/lp', '_blank');
+    // LP遷移（UTMパラメータ付き）
+    const lpUrl = generateLPUrl(computedType, totalScore);
+    if (lpUrl) {
+      // GA4イベント送信
+      sendEvent('CTA_Click', {
+        diagnosis_type: computedType,
+        diagnosis_score: totalScore,
+        timestamp: new Date().toISOString(),
+      });
+      window.open(lpUrl, '_blank');
+    } else {
+      console.error('[ResultPage] LP URLの生成に失敗しました');
+    }
   };
 
-  const handleBenefitClick = () => {
-    // @MOCK_TO_API: UTAGE登録フォーム遷移（UTMパラメータ付き）
-    // 本番実装時: VITE_UTAGE_BASE_URL環境変数から取得
-    window.open('https://example.com/benefit', '_blank');
-  };
+  // 特典登録ハンドラー（一時的に非表示のため使用していない）
+  // const handleBenefitClick = () => {
+  //   const utageUrl = generateUTAGEUrl(computedType, totalScore);
+  //   if (utageUrl) {
+  //     sendEvent('Benefit_Register', {
+  //       diagnosis_type: computedType,
+  //       diagnosis_score: totalScore,
+  //       timestamp: new Date().toISOString(),
+  //     });
+  //     window.open(utageUrl, '_blank');
+  //   } else {
+  //     console.error('[ResultPage] UTAGE URLの生成に失敗しました');
+  //   }
+  // };
 
   return (
     <PublicLayout>
@@ -216,7 +225,7 @@ export const ResultPage: React.FC = () => {
               color: 'rgba(0, 0, 0, 0.85)',
             }}
           >
-            {typeNames[computedType] || computedType}
+            {typeMetadata.name}
           </Typography>
 
           {/* アクセント線 */}
@@ -243,7 +252,7 @@ export const ResultPage: React.FC = () => {
               mx: 'auto',
             }}
           >
-            {typeDescriptions[computedType] || ''}
+            {typeMetadata.description}
           </Typography>
 
           {/* MUI: Typography fontSize={15} color="#5a6a7a" mt={2} mb={5} maxWidth={600} mx="auto" */}
@@ -257,10 +266,10 @@ export const ResultPage: React.FC = () => {
               mx: 'auto',
             }}
           >
-            {typeSubTexts[computedType] || ''}
+            {typeMetadata.subText}
           </Typography>
 
-          {/* 100点満点スコア */}
+          {/* 100点満点スコア（BEGINNERは特別表示） */}
           {/* MUI: Box mb={0} */}
           <Box sx={{ mb: 0 }}>
             {/* MUI: Typography variant="caption" color="text.disabled" opacity={0.8} */}
@@ -272,7 +281,9 @@ export const ResultPage: React.FC = () => {
                 opacity: 0.8,
               }}
             >
-              総合スコア：{totalScore} / 100
+              {computedType === 'BEGINNER'
+                ? '現在地：スタート地点'
+                : `総合スコア：${totalScore} / 100`}
             </Typography>
           </Box>
         </Box>
@@ -345,7 +356,7 @@ export const ResultPage: React.FC = () => {
                   variant="body2"
                   sx={{
                     fontWeight: 500,
-                    color: axis.isLowest ? '#d9a88a' : '#5a9fd4',
+                    color: axis.isLowest ? '#b87850' : '#5a9fd4',
                     mb: 1,
                     fontSize: 15,
                   }}
@@ -356,7 +367,7 @@ export const ResultPage: React.FC = () => {
                 <Typography
                   variant="body1"
                   sx={{
-                    color: axis.isLowest ? '#d9a88a' : 'rgba(0, 0, 0, 0.75)',
+                    color: axis.isLowest ? '#b87850' : 'rgba(0, 0, 0, 0.75)',
                     lineHeight: 2.0,
                     fontSize: 17,
                   }}
@@ -494,99 +505,88 @@ export const ResultPage: React.FC = () => {
           ))}
         </Paper>
 
-        {/* 商品提案CTA */}
-        {/* MUI: Paper elevation={0} borderRadius={4} p={4} mb={4} textAlign="center" sx={{background: '#f4f9fd', border: '1px solid #d5e6f2', boxShadow: '0 2px 8px rgba(0,0,0,0.05)'}} */}
+        {/* 商品提案CTA（タイプ別出し分け + デザイン強化） */}
         <Paper
           elevation={0}
           sx={{
             borderRadius: 4,
-            p: 4,
+            p: 5,
             mb: 4,
             textAlign: 'center',
-            background: '#f4f9fd',
-            border: '1px solid #d5e6f2',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
+            background: 'linear-gradient(135deg, #f8fbff 0%, #f0f6fa 100%)',
+            border: '2px solid #b8d4e8',
+            boxShadow: '0 4px 16px rgba(90, 159, 212, 0.15)',
           }}
         >
           {/* 絵文字単体 */}
-          {/* MUI: Box textAlign="center" mb={2} */}
-          <Box sx={{ textAlign: 'center', mb: 2 }}>
-            <Box component="span" sx={{ fontSize: 32 }}>
+          <Box sx={{ textAlign: 'center', mb: 2.5 }}>
+            <Box component="span" sx={{ fontSize: 40 }}>
               ✨
             </Box>
           </Box>
 
-          {/* MUI: Typography variant="h5" fontSize={19} mb={2.5} fontWeight={400} color="text.secondary" */}
+          {/* タイトル（タイプ別） */}
           <Typography
             variant="h5"
             sx={{
-              fontSize: 19,
-              mb: 2.5,
-              fontWeight: 400,
-              color: 'rgba(0, 0, 0, 0.65)',
+              fontSize: 21,
+              mb: 3,
+              fontWeight: 600,
+              color: 'rgba(0, 0, 0, 0.85)',
               maxWidth: 600,
               mx: 'auto',
+              lineHeight: 1.6,
             }}
           >
-            頑張り続けなくても、続けられる形があります。
+            {typeMetadata.cta.title}
           </Typography>
 
-          {/* MUI: Typography fontSize={14} color="#7a8a9a" mt={2} mb={4} lineHeight={2.0} */}
+          {/* 説明文（タイプ別、改行対応） */}
           <Typography
             sx={{
-              fontSize: 14,
-              color: '#7a8a9a',
-              mt: 2,
+              fontSize: 16,
+              color: 'rgba(0, 0, 0, 0.7)',
               mb: 4,
               lineHeight: 2.0,
               maxWidth: 600,
               mx: 'auto',
+              whiteSpace: 'pre-line',
             }}
           >
-            無理に選ばなくて大丈夫です。今は"知っておくだけ"で十分です。
+            {typeMetadata.cta.description}
           </Typography>
 
-          {/* MUI: Button variant="outlined" color="primary" size="large" fullWidth sx={{ maxWidth: 400, mb: 2, bgcolor: '#ffffff', boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }} */}
+          {/* CTAボタン（塗りつぶし型 + ホバー強化） */}
           <Button
-            variant="outlined"
-            color="primary"
+            variant="contained"
             size="large"
             fullWidth
             onClick={handleCTAClick}
             sx={{
               maxWidth: 400,
               mb: 2,
-              bgcolor: '#ffffff',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+              bgcolor: '#5a9fd4',
+              color: '#ffffff',
+              boxShadow: '0 3px 12px rgba(90, 159, 212, 0.25)',
               borderRadius: 3,
-              fontSize: 16,
-              fontWeight: 400,
+              fontSize: 17,
+              fontWeight: 500,
               textTransform: 'none',
-              py: 1.75,
-              ...buttonHoverStyle,
+              py: 2,
+              transition: 'all 0.3s ease',
+              '&:hover': {
+                bgcolor: '#6aaee0',
+                boxShadow: '0 5px 16px rgba(90, 159, 212, 0.35)',
+                transform: 'translateY(-2px)',
+              },
             }}
           >
-            仕組み化の選択肢を見てみる
+            {typeMetadata.cta.buttonText}
           </Button>
-
-          {/* MUI: Typography variant="caption" color="text.disabled" textAlign="center" */}
-          <Typography
-            variant="caption"
-            color="text.disabled"
-            sx={{
-              textAlign: 'center',
-              fontSize: 13,
-              maxWidth: 600,
-              mx: 'auto',
-              display: 'block',
-            }}
-          >
-            ※ 別タブで商品ページを開きます
-          </Typography>
         </Paper>
 
-        {/* 特典登録 */}
-        {/* MUI: Paper elevation={0} borderRadius={4} p={4} mb={4} textAlign="center" sx={{background: '#fff8f4', border: '1px solid #f0dbc8', boxShadow: '0 2px 8px rgba(0,0,0,0.06)'}} */}
+        {/* 特典登録ブロック - 一時的に非表示 */}
+        {/*
         <Paper
           elevation={0}
           sx={{
@@ -599,7 +599,6 @@ export const ResultPage: React.FC = () => {
             boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
           }}
         >
-          {/* MUI: Typography variant="h5" fontSize={19} mb={2.5} fontWeight={400} color="text.secondary" */}
           <Typography
             variant="h5"
             sx={{
@@ -614,7 +613,6 @@ export const ResultPage: React.FC = () => {
             🎁 無料特典を受け取る
           </Typography>
 
-          {/* MUI: Typography variant="body1" color="text.secondary" mb={4} lineHeight={2.0} fontSize={17} */}
           <Typography
             variant="body1"
             color="text.secondary"
@@ -633,7 +631,6 @@ export const ResultPage: React.FC = () => {
             （PDF + Googleスプレッドシート）
           </Typography>
 
-          {/* MUI: Button variant="outlined" color="primary" size="large" fullWidth sx={{ maxWidth: 400, bgcolor: '#ffffff', boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }} */}
           <Button
             variant="outlined"
             color="primary"
@@ -655,7 +652,6 @@ export const ResultPage: React.FC = () => {
             特典を受け取る
           </Button>
 
-          {/* MUI: Typography variant="caption" color="text.disabled" mt={2} */}
           <Typography
             variant="caption"
             color="text.disabled"
@@ -670,6 +666,7 @@ export const ResultPage: React.FC = () => {
             ※ 登録フォームに移動します（別タブ）
           </Typography>
         </Paper>
+        */}
       </Container>
     </PublicLayout>
   );

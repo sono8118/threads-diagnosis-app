@@ -2,7 +2,7 @@
 // P-001: 診断ページ - Threads運用診断
 // ============================================================================
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Box,
   Container,
@@ -17,6 +17,7 @@ import { useNavigate } from 'react-router-dom';
 import { useDiagnosisStore } from '../stores/diagnosisStore';
 import { QUESTIONS } from '../constants/QUESTIONS';
 import { calculateDiagnosis } from '../logic/diagnosisLogic';
+import { generateCustomMessages } from '../logic/messageEngine';
 import { saveDiagnosisSession } from '../utils/sessionStorage';
 import { useGA4 } from '../hooks/useGA4';
 import type { DiagnosisSession } from '../types';
@@ -47,6 +48,9 @@ export const DiagnosisPage: React.FC = () => {
   // ローカル状態
   const [screenState, setScreenState] = useState<ScreenState>('start');
 
+  // setTimeout競合防止用フラグ（複数回のhandleViewResult呼び出しを防ぐ）
+  const isTransitioningRef = useRef<boolean>(false);
+
   // 全画面背景グラデーションを設定（マウント時）
   useEffect(() => {
     // body要素に背景グラデーションを適用
@@ -70,22 +74,24 @@ export const DiagnosisPage: React.FC = () => {
   const progressPercent = Math.round(((currentQuestionIndex + 1) / totalQuestions) * 100);
   const remainingQuestions = totalQuestions - (currentQuestionIndex + 1);
 
-  // 現在の質問の回答を派生状態として計算（メモ化）
-  const currentAnswer = useMemo(
-    () => answers.find((a) => a.questionId === currentQuestion?.id),
-    [answers, currentQuestion?.id]
-  );
+  // 選択値の状態（ローカルUI状態として管理）
+  // 質問が変わったときに既存の回答を表示、その後はユーザー操作で更新
+  const [selectedValue, setSelectedValue] = useState<number | null>(null);
 
-  // 選択値の初期値を計算（Lint回避のため派生状態として扱う）
-  const initialSelectedValue = currentAnswer?.value ?? null;
-  const [selectedValue, setSelectedValue] = useState<number | null>(initialSelectedValue);
+  // answersの最新値を参照用に保持（useEffect内で使用）
+  const answersRef = useRef(answers);
+  useEffect(() => {
+    answersRef.current = answers;
+  }, [answers]);
 
-  // 質問が変わったら選択値をリセット（Ref経由でLint回避）
-  const prevQuestionId = React.useRef(currentQuestion?.id);
-  if (prevQuestionId.current !== currentQuestion?.id) {
-    prevQuestionId.current = currentQuestion?.id;
-    setSelectedValue(initialSelectedValue);
-  }
+  // 質問が変わったときのみ選択値を更新
+  // answersをrefで参照することで、質問ID変更時のみ更新される
+  const currentQuestionId = currentQuestion?.id;
+  useEffect(() => {
+    const answer = answersRef.current.find((a) => a.questionId === currentQuestionId);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setSelectedValue(answer?.value ?? null);
+  }, [currentQuestionId]);
 
   // ========== 画面1: 診断開始画面のハンドラー ==========
 
@@ -139,6 +145,13 @@ export const DiagnosisPage: React.FC = () => {
       setSelectedValue(null);
     } else {
       // 全問回答完了 → 診断完了画面へ
+
+      // 既に遷移処理中の場合は無視（連続クリック防止）
+      if (isTransitioningRef.current) {
+        return;
+      }
+
+      isTransitioningRef.current = true;
       setScreenState('complete');
 
       // 診断結果を計算
@@ -151,9 +164,10 @@ export const DiagnosisPage: React.FC = () => {
         timestamp: new Date().toISOString(),
       });
 
-      // 1.5秒後に自動遷移
+      // 1.5秒後に自動遷移（処理中フラグにより1回のみ実行）
       setTimeout(() => {
         handleViewResult();
+        // 遷移完了後はフラグリセット不要（ページ遷移で破棄される）
       }, 1500);
     }
   };
@@ -174,11 +188,15 @@ export const DiagnosisPage: React.FC = () => {
     // 診断結果を計算
     const result = calculateDiagnosis(answers);
 
+    // カスタムメッセージを生成
+    const customMessages = generateCustomMessages(result, answers);
+
     // sessionStorageに保存
     const session: DiagnosisSession = {
       answers,
       computedScores: result.normalizedScores,
       computedType: result.diagnosisType,
+      customMessages,
       timestamp: Date.now(),
     };
     saveDiagnosisSession(session);

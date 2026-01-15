@@ -4,6 +4,7 @@ import {
   RadarChart,
   PolarGrid,
   PolarAngleAxis,
+  PolarRadiusAxis,
   ResponsiveContainer,
 } from 'recharts';
 import type { AxisScores, AxisKey } from '@/types';
@@ -37,7 +38,6 @@ export const RadarChartComponent: React.FC<RadarChartComponentProps> = ({
   const chartData = axisOrder.map((key) => ({
     axis: axisLabels[key],
     value: scores[key],
-    fullMark: 100,
   }));
 
   return (
@@ -53,6 +53,13 @@ export const RadarChartComponent: React.FC<RadarChartComponentProps> = ({
         <PolarAngleAxis
           dataKey="axis"
           tick={{ fill: '#666', fontSize: 15, fontWeight: 500 }}
+        />
+
+        {/* 半径軸（0-100の範囲を固定） */}
+        <PolarRadiusAxis
+          angle={90}
+          domain={[0, 100]}
+          tick={false}
         />
 
         {/* データ領域 */}

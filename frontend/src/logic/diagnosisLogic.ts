@@ -82,13 +82,23 @@ function calculateTotalScore(normalizedScores: AxisScores): number {
 // ----------------------------------------------------------------------------
 
 /**
- * 最低スコアの軸を特定（同点時は優先順位: design > production > improvement > business）
+ * 最低スコアの軸を特定
+ *
+ * 同点時の優先順位:
+ * - 通常（低〜中スコア）: design > production > improvement > business
+ * - 高得点（全軸80点以上）: business > improvement > production > design
  */
-function findLowestAxis(rawScores: AxisScores): AxisKey {
-  const axes: AxisKey[] = ['design', 'production', 'improvement', 'business'];
+function findLowestAxis(rawScores: AxisScores, normalizedScores: AxisScores): AxisKey {
+  // 全軸が高得点（80点以上）かチェック
+  const allHighScore = Object.values(normalizedScores).every((score) => score >= 80);
 
-  let lowestAxis: AxisKey = 'design';
-  let lowestScore = rawScores.design;
+  // 高得点の場合は逆優先順位（ビジネス優先）
+  const axes: AxisKey[] = allHighScore
+    ? ['business', 'improvement', 'production', 'design']
+    : ['design', 'production', 'improvement', 'business'];
+
+  let lowestAxis: AxisKey = axes[0];
+  let lowestScore = rawScores[axes[0]];
 
   // 同点時の優先順位を考慮して順番に評価
   axes.forEach((axis) => {
@@ -138,11 +148,25 @@ export function calculateDiagnosis(answers: Answer[]): DiagnosisResult {
   const isZeroScore = Object.values(rawScores).every((score) => score === 0);
   const isExcellent = Object.values(normalizedScores).every((score) => score >= 85);
 
-  // 5. 最低軸特定
-  const lowestAxis = findLowestAxis(rawScores);
+  // 5. タイプ判定（特別判定優先）
+  let diagnosisType: DiagnosisType;
+  let lowestAxis: AxisKey;
 
-  // 6. タイプ判定
-  const diagnosisType = determineDiagnosisType(lowestAxis);
+  if (isZeroScore) {
+    // 全0点の場合は「はじまりタイプ」
+    diagnosisType = 'BEGINNER';
+    // 最低軸は形式的にdesignにしておく（実際には使われない）
+    lowestAxis = 'design';
+  } else if (isExcellent) {
+    // 全軸85点以上の場合は「安定成長タイプ」
+    diagnosisType = 'BALANCED';
+    // 最低軸は形式的にbusinessにしておく（実際には使われない）
+    lowestAxis = 'business';
+  } else {
+    // 通常の判定: 最低軸を特定してタイプ判定
+    lowestAxis = findLowestAxis(rawScores, normalizedScores);
+    diagnosisType = determineDiagnosisType(lowestAxis);
+  }
 
   return {
     rawScores,

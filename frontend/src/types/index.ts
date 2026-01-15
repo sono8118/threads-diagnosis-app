@@ -9,7 +9,7 @@
 /**
  * 診断タイプ
  */
-export type DiagnosisType = 'T1' | 'T2' | 'T3' | 'T4';
+export type DiagnosisType = 'BEGINNER' | 'T1' | 'T2' | 'T3' | 'T4' | 'BALANCED';
 
 /**
  * 回答値（0点、3点、6点、8点）
@@ -60,6 +60,8 @@ export interface DiagnosisSession {
   computedScores: AxisScores;
   /** タイプ判定結果（T1/T2/T3/T4） */
   computedType: DiagnosisType;
+  /** カスタムメッセージ（最大3つ: 主メッセージ + 刺さる指摘2つ） */
+  customMessages: string[];
   /** セッション作成日時（Unix timestamp） */
   timestamp: number;
 }
@@ -380,6 +382,7 @@ export type GA4EventName =
   | 'Diagnosis_Start'
   | 'Diagnosis_Complete'
   | 'Result_View'
+  | 'CTA_View'
   | 'CTA_Click'
   | 'Benefit_Register'
   | 'LP_Click';
