@@ -20,6 +20,7 @@ import { calculateDiagnosis } from '../logic/diagnosisLogic';
 import { generateCustomMessages } from '../logic/messageEngine';
 import { saveDiagnosisSession } from '../utils/sessionStorage';
 import { useGA4 } from '../hooks/useGA4';
+import { Footer } from '../components/common/Footer';
 import type { DiagnosisSession } from '../types';
 
 /**
@@ -312,6 +313,8 @@ export const DiagnosisPage: React.FC = () => {
           >
             診断を始める
           </Button>
+
+          <Footer />
         </Container>
       )}
 
@@ -496,6 +499,8 @@ export const DiagnosisPage: React.FC = () => {
               次へ
             </Button>
           </Stack>
+
+          <Footer />
         </Container>
       )}
 
@@ -560,6 +565,8 @@ export const DiagnosisPage: React.FC = () => {
               ))}
             </Box>
           </Box>
+
+          <Footer />
         </Container>
       )}
     </>

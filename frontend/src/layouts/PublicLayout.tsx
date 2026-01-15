@@ -1,5 +1,6 @@
 import React from 'react';
 import { Box } from '@mui/material';
+import { Footer } from '../components/common/Footer';
 
 interface PublicLayoutProps {
   children: React.ReactNode;
@@ -19,9 +20,12 @@ export const PublicLayout: React.FC<PublicLayoutProps> = ({ children }) => {
         fontSize: '17px',
         color: 'rgba(0, 0, 0, 0.87)',
         lineHeight: 2.0,
+        display: 'flex',
+        flexDirection: 'column',
       }}
     >
-      {children}
+      <Box sx={{ flex: 1 }}>{children}</Box>
+      <Footer />
     </Box>
   );
 };
