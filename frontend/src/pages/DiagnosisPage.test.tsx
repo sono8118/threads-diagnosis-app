@@ -93,20 +93,19 @@ describe('DiagnosisPage - 診断開始', () => {
     mockNavigate.mockClear();
   });
 
-  it('同意チェックなしで診断開始ボタンをクリックするとアラートが表示される', () => {
-    // alertのモック
-    const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
-
+  it('同意チェックなしで診断開始ボタンをクリックするとダイアログが表示される', async () => {
     renderWithRouter();
 
     const startButton = screen.getByRole('button', { name: /診断を始める/i });
     fireEvent.click(startButton);
 
-    expect(alertSpy).toHaveBeenCalledWith(
-      '診断結果に合ったアドバイスを受け取ることに同意してください'
-    );
-
-    alertSpy.mockRestore();
+    // ダイアログが表示されることを確認
+    await waitFor(() => {
+      expect(screen.getByText('同意確認')).toBeInTheDocument();
+      expect(
+        screen.getByText('診断結果に合ったアドバイスを受け取ることに同意してください')
+      ).toBeInTheDocument();
+    });
   });
 
   it('同意チェックありで診断開始ボタンをクリックすると質問画面に遷移する', async () => {
