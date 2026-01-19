@@ -12,12 +12,12 @@ describe('RadarChartComponent - レンダリングテスト', () => {
     design: 75,
     production: 80,
     improvement: 85,
-    business: 70,
+    continuation: 70,
   };
 
   it('正常にレンダリングされる', () => {
     const { container } = render(
-      <RadarChartComponent scores={defaultScores} lowestAxis="business" />
+      <RadarChartComponent scores={defaultScores} lowestAxis="continuation" />
     );
 
     // ResponsiveContainerが存在することを確認
@@ -26,7 +26,7 @@ describe('RadarChartComponent - レンダリングテスト', () => {
 
   it('4軸のラベルが表示される', () => {
     const { container } = render(
-      <RadarChartComponent scores={defaultScores} lowestAxis="business" />
+      <RadarChartComponent scores={defaultScores} lowestAxis="continuation" />
     );
 
     // レンダリングが成功することを確認（Rechartsの描画はテスト環境で完全ではない）
@@ -38,11 +38,11 @@ describe('RadarChartComponent - レンダリングテスト', () => {
       design: 100,
       production: 75,
       improvement: 50,
-      business: 25,
+      continuation: 25,
     };
 
     const { container } = render(
-      <RadarChartComponent scores={scores} lowestAxis="business" />
+      <RadarChartComponent scores={scores} lowestAxis="continuation" />
     );
 
     // ResponsiveContainerが存在することを確認
@@ -57,7 +57,7 @@ describe('RadarChartComponent - レンダリングテスト', () => {
     // 別の最低軸で再レンダリング
     rerender(<RadarChartComponent scores={defaultScores} lowestAxis="production" />);
     rerender(<RadarChartComponent scores={defaultScores} lowestAxis="improvement" />);
-    rerender(<RadarChartComponent scores={defaultScores} lowestAxis="business" />);
+    rerender(<RadarChartComponent scores={defaultScores} lowestAxis="continuation" />);
 
     // エラーが発生しないことを確認
     expect(true).toBe(true);
@@ -70,7 +70,7 @@ describe('RadarChartComponent - データポイント', () => {
       design: 0,
       production: 0,
       improvement: 0,
-      business: 0,
+      continuation: 0,
     };
 
     const { container } = render(
@@ -86,11 +86,11 @@ describe('RadarChartComponent - データポイント', () => {
       design: 100,
       production: 100,
       improvement: 100,
-      business: 100,
+      continuation: 100,
     };
 
     const { container } = render(
-      <RadarChartComponent scores={scores} lowestAxis="business" />
+      <RadarChartComponent scores={scores} lowestAxis="continuation" />
     );
 
     // レンダリングが成功することを確認
@@ -102,7 +102,7 @@ describe('RadarChartComponent - データポイント', () => {
       design: 25,
       production: 50,
       improvement: 75,
-      business: 100,
+      continuation: 100,
     };
 
     const { container } = render(
@@ -120,7 +120,7 @@ describe('RadarChartComponent - エッジケース', () => {
       design: 50,
       production: 50,
       improvement: 50,
-      business: 50,
+      continuation: 50,
     };
 
     const { container } = render(
@@ -135,11 +135,11 @@ describe('RadarChartComponent - エッジケース', () => {
       design: 75.5,
       production: 80.3,
       improvement: 85.7,
-      business: 70.1,
+      continuation: 70.1,
     };
 
     const { container } = render(
-      <RadarChartComponent scores={scores} lowestAxis="business" />
+      <RadarChartComponent scores={scores} lowestAxis="continuation" />
     );
 
     expect(container.querySelector('.recharts-responsive-container')).toBeInTheDocument();
@@ -150,10 +150,10 @@ describe('RadarChartComponent - エッジケース', () => {
       design: 75,
       production: 80,
       improvement: 85,
-      business: 70,
+      continuation: 70,
     };
 
-    const axes: AxisKey[] = ['design', 'production', 'improvement', 'business'];
+    const axes: AxisKey[] = ['design', 'production', 'improvement', 'continuation'];
 
     axes.forEach((axis) => {
       const { container } = render(
@@ -169,8 +169,8 @@ describe('RadarChartComponent - レスポンシブ', () => {
   it('ResponsiveContainerが100%の幅と高さを持つ', () => {
     const { container } = render(
       <RadarChartComponent
-        scores={{ design: 75, production: 80, improvement: 85, business: 70 }}
-        lowestAxis="business"
+        scores={{ design: 75, production: 80, improvement: 85, continuation: 70 }}
+        lowestAxis="continuation"
       />
     );
 
@@ -190,7 +190,7 @@ describe('RadarChartComponent - 現実的なシナリオ', () => {
       design: 0,
       production: 75,
       improvement: 75,
-      business: 75,
+      continuation: 75,
     };
 
     const { container } = render(
@@ -205,7 +205,7 @@ describe('RadarChartComponent - 現実的なシナリオ', () => {
       design: 75,
       production: 0,
       improvement: 75,
-      business: 75,
+      continuation: 75,
     };
 
     const { container } = render(
@@ -220,7 +220,7 @@ describe('RadarChartComponent - 現実的なシナリオ', () => {
       design: 75,
       production: 75,
       improvement: 0,
-      business: 75,
+      continuation: 75,
     };
 
     const { container } = render(
@@ -230,16 +230,16 @@ describe('RadarChartComponent - 現実的なシナリオ', () => {
     expect(container.querySelector('.recharts-responsive-container')).toBeInTheDocument();
   });
 
-  it('シナリオ4: T4もったいないタイプ（business最低）', () => {
+  it('シナリオ4: T4もったいないタイプ（continuation最低）', () => {
     const scores: AxisScores = {
       design: 75,
       production: 75,
       improvement: 75,
-      business: 0,
+      continuation: 0,
     };
 
     const { container } = render(
-      <RadarChartComponent scores={scores} lowestAxis="business" />
+      <RadarChartComponent scores={scores} lowestAxis="continuation" />
     );
 
     expect(container.querySelector('.recharts-responsive-container')).toBeInTheDocument();
@@ -250,11 +250,11 @@ describe('RadarChartComponent - 現実的なシナリオ', () => {
       design: 100,
       production: 100,
       improvement: 100,
-      business: 100,
+      continuation: 100,
     };
 
     const { container } = render(
-      <RadarChartComponent scores={scores} lowestAxis="business" />
+      <RadarChartComponent scores={scores} lowestAxis="continuation" />
     );
 
     expect(container.querySelector('.recharts-responsive-container')).toBeInTheDocument();

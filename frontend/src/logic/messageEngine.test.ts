@@ -59,7 +59,7 @@ describe('messageEngine.ts - 主メッセージ生成', () => {
     const messages = generateCustomMessages(result, answers);
 
     expect(messages[0]).toBe(
-      '発信は強いのに売上に変換できていない状態です。導線を整えて成果を最大化しましょう。'
+      '今は、頑張ればできるのに、「頑張らないと続かない形」になっています。仕組みを整えれば、迷わず・疲れず・自然に回る運用に変わります。'
     );
   });
 
@@ -130,7 +130,7 @@ describe('messageEngine.ts - 刺さる指摘（優先度順）', () => {
     });
   });
 
-  describe('Q10=0（致命傷系、priority 90）', () => {
+  describe('Q10=0（致命傷系、priority 95）', () => {
     it('Q10=0の場合、メッセージが生成される', () => {
       const answers = createAnswers([6, 6, 6, 6, 6, 6, 6, 6, 6, 0, 6, 6]);
       const result = calculateDiagnosis(answers);
@@ -138,7 +138,7 @@ describe('messageEngine.ts - 刺さる指摘（優先度順）', () => {
       const messages = generateCustomMessages(result, answers);
 
       expect(messages).toContain(
-        '出口がないため、どれだけ頑張っても成果に変換されません。'
+        '投稿の流れが決まっていないため、毎回迷いが発生し、継続が不安定になります。'
       );
     });
   });
@@ -187,7 +187,7 @@ describe('messageEngine.ts - 刺さる指摘（優先度順）', () => {
     });
   });
 
-  describe('Q11=0（導線なし系、priority 70）', () => {
+  describe('Q11=0（継続支援系、priority 100）', () => {
     it('Q11=0の場合、メッセージが生成される', () => {
       const answers = createAnswers([6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 0, 6]);
       const result = calculateDiagnosis(answers);
@@ -195,12 +195,12 @@ describe('messageEngine.ts - 刺さる指摘（優先度順）', () => {
       const messages = generateCustomMessages(result, answers);
 
       expect(messages).toContain(
-        '商品への導線がないため、フォロワーが増えても売上につながりません。'
+        '投稿の流れを支える仕組みがないため、毎回ゼロから考える運用になっています。まずは「同じ流れで回す形」を作りましょう。'
       );
     });
   });
 
-  describe('Q12=0（導線なし系、priority 65）', () => {
+  describe('Q12=0（継続支援系、priority 90）', () => {
     it('Q12=0の場合、メッセージが生成される', () => {
       const answers = createAnswers([6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 0]);
       const result = calculateDiagnosis(answers);
@@ -208,7 +208,7 @@ describe('messageEngine.ts - 刺さる指摘（優先度順）', () => {
       const messages = generateCustomMessages(result, answers);
 
       expect(messages).toContain(
-        'まだ売上が出ていない状態です。まずは小さく1件の成功体験を作りましょう。'
+        '運用が「頑張り」になっており、長く続けるのが難しい状態です。'
       );
     });
   });
@@ -427,19 +427,19 @@ describe('messageEngine.ts - 現実的なシナリオ', () => {
     );
   });
 
-  it('シナリオ4: 事業力が低い（T4、Q10=0、Q11=0）', () => {
+  it('シナリオ4: 継続力が低い（T4、Q10=0、Q11=0）', () => {
     const answers = createAnswers([6, 6, 6, 6, 6, 6, 6, 6, 6, 0, 0, 6]);
     const result = calculateDiagnosis(answers);
 
     const messages = generateCustomMessages(result, answers);
 
     expect(result.diagnosisType).toBe('T4');
-    expect(messages[0]).toContain('売上に変換できていない');
+    expect(messages[0]).toContain('頑張らないと続かない');
     expect(messages[1]).toBe(
-      '出口がないため、どれだけ頑張っても成果に変換されません。'
+      '投稿の流れを支える仕組みがないため、毎回ゼロから考える運用になっています。まずは「同じ流れで回す形」を作りましょう。'
     );
     expect(messages[2]).toBe(
-      '商品への導線がないため、フォロワーが増えても売上につながりません。'
+      '投稿の流れが決まっていないため、毎回迷いが発生し、継続が不安定になります。'
     );
   });
 

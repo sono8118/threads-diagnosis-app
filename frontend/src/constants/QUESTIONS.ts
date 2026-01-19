@@ -21,19 +21,19 @@ export const QUESTIONS: Question[] = [
   // 【設計力】
   {
     id: 1,
-    question: 'あなたは発信を「どんな人」に届けたいか説明できますか？',
+    question: 'あなたは発信を「どんな人」に届けたいか、はっきり説明できますか？',
     options: COMMON_OPTIONS,
     axis: 'design',
   },
   {
     id: 2,
-    question: 'あなたの投稿で、フォロワーは何を得られるかを3つ説明できますか？',
+    question: 'あなたの投稿で、フォロワーは「どんな変化や気づき」を得られるかを3つ説明できますか？',
     options: COMMON_OPTIONS,
     axis: 'design',
   },
   {
     id: 3,
-    question: '他の発信者との違いを、一言で説明できますか？',
+    question: '他の発信者との違い（あなたらしさ）を、一言で説明できますか？',
     options: COMMON_OPTIONS,
     axis: 'design',
   },
@@ -47,13 +47,13 @@ export const QUESTIONS: Question[] = [
   },
   {
     id: 5,
-    question: '投稿を作るとき、使っている型（テンプレート）はありますか？',
+    question: '投稿を作るときに、毎回使っている型（テンプレート）がありますか？',
     options: COMMON_OPTIONS,
     axis: 'production',
   },
   {
     id: 6,
-    question: '1つの投稿を、負担なく短時間で作れていますか？',
+    question: '1つの投稿を、負担を感じず短時間で作れていますか？',
     options: COMMON_OPTIONS,
     axis: 'production',
   },
@@ -61,40 +61,40 @@ export const QUESTIONS: Question[] = [
   // 【改善力】
   {
     id: 7,
-    question: '投稿後、数値を習慣的に確認していますか？',
+    question: '投稿後の数値を見て、「良かった理由・悪かった理由」を考えていますか？',
     options: COMMON_OPTIONS,
     axis: 'improvement',
   },
   {
     id: 8,
-    question: '数値を見て、なぜ伸びたか／伸びなかったかを説明できますか？',
+    question: '数値をもとに、次の投稿内容を変えたことがありますか？',
     options: COMMON_OPTIONS,
     axis: 'improvement',
   },
   {
     id: 9,
-    question: '伸びた投稿を意図的に再現していますか？',
+    question: '伸びた投稿の要素を意識して、再現を試みていますか？',
     options: COMMON_OPTIONS,
     axis: 'improvement',
   },
 
-  // 【事業力】
+  // 【継続力】
   {
     id: 10,
-    question: 'Threadsから案内できる商品・サービスがありますか？',
+    question: '投稿作成や投稿作業を「決まった流れ」で行えていますか？',
     options: COMMON_OPTIONS,
-    axis: 'business',
+    axis: 'continuation',
   },
   {
     id: 11,
-    question: 'Threadsから商品までの導線は整っていますか？',
+    question: '忙しい日でも迷わず動ける投稿の仕組み（手順・環境）がありますか？',
     options: COMMON_OPTIONS,
-    axis: 'business',
+    axis: 'continuation',
   },
   {
     id: 12,
-    question: 'Threadsをきっかけに、実際に売上が発生したことはありますか？',
+    question: 'Threadsの投稿を「がんばらなきゃ」ではなく「自然な習慣」として続けられていますか？',
     options: COMMON_OPTIONS,
-    axis: 'business',
+    axis: 'continuation',
   },
 ];

@@ -37,7 +37,7 @@ export const MESSAGE_RULES: MessageRules = {
     T1: '誰に何を届けるかが定まっていない状態です。まずはターゲット設定から始めましょう。',
     T2: 'やる気はあるのに続ける仕組みがない状態です。仕組みと習慣で楽になりましょう。',
     T3: '頑張っているのに成果に変わらない状態です。改善ループを回して成果を出しましょう。',
-    T4: '発信は強いのに売上に変換できていない状態です。導線を整えて成果を最大化しましょう。',
+    T4: '今は、頑張ればできるのに、「頑張らないと続かない形」になっています。仕組みを整えれば、迷わず・疲れず・自然に回る運用に変わります。',
   },
 
   /**
@@ -84,7 +84,7 @@ export const MESSAGE_RULES: MessageRules = {
 
     {
       id: 'q10-zero',
-      priority: 90,
+      priority: 95,
       conditions: {
         logic: 'AND',
         conditions: [
@@ -95,7 +95,7 @@ export const MESSAGE_RULES: MessageRules = {
           },
         ],
       },
-      message: '出口がないため、どれだけ頑張っても成果に変換されません。',
+      message: '投稿の流れが決まっていないため、毎回迷いが発生し、継続が不安定になります。',
       enabled: true,
     },
 
@@ -164,7 +164,7 @@ export const MESSAGE_RULES: MessageRules = {
 
     {
       id: 'q11-zero',
-      priority: 70,
+      priority: 100,
       conditions: {
         logic: 'AND',
         conditions: [
@@ -175,13 +175,13 @@ export const MESSAGE_RULES: MessageRules = {
           },
         ],
       },
-      message: '商品への導線がないため、フォロワーが増えても売上につながりません。',
+      message: '投稿の流れを支える仕組みがないため、毎回ゼロから考える運用になっています。まずは「同じ流れで回す形」を作りましょう。',
       enabled: true,
     },
 
     {
       id: 'q12-zero',
-      priority: 65,
+      priority: 90,
       conditions: {
         logic: 'AND',
         conditions: [
@@ -192,7 +192,7 @@ export const MESSAGE_RULES: MessageRules = {
           },
         ],
       },
-      message: 'まだ売上が出ていない状態です。まずは小さく1件の成功体験を作りましょう。',
+      message: '運用が「頑張り」になっており、長く続けるのが難しい状態です。',
       enabled: true,
     },
 

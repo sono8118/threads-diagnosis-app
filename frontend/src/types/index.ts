@@ -19,7 +19,7 @@ export type AnswerValue = 0 | 3 | 6 | 8;
 /**
  * 4軸スコアのキー
  */
-export type AxisKey = 'design' | 'production' | 'improvement' | 'business';
+export type AxisKey = 'design' | 'production' | 'improvement' | 'continuation';
 
 /**
  * 質問ID（1-12）
@@ -46,8 +46,8 @@ export interface AxisScores {
   production: number;
   /** 改善力（PDCA） */
   improvement: number;
-  /** 事業力（マネタイズ） */
-  business: number;
+  /** 継続力（仕組みと習慣） */
+  continuation: number;
 }
 
 /**
@@ -62,6 +62,8 @@ export interface DiagnosisSession {
   computedType: DiagnosisType;
   /** カスタムメッセージ（最大3つ: 主メッセージ + 刺さる指摘2つ） */
   customMessages: string[];
+  /** 最低スコアの軸（優先順位を考慮） */
+  lowestAxis: AxisKey;
   /** セッション作成日時（Unix timestamp） */
   timestamp: number;
 }
@@ -438,7 +440,7 @@ export function isDiagnosisType(type: unknown): type is DiagnosisType {
 export function isAxisKey(key: unknown): key is AxisKey {
   return (
     typeof key === 'string' &&
-    ['design', 'production', 'improvement', 'business'].includes(key)
+    ['design', 'production', 'improvement', 'continuation'].includes(key)
   );
 }
 
@@ -483,14 +485,15 @@ export function isDiagnosisSession(obj: unknown): obj is DiagnosisSession {
     typeof scores.design !== 'number' ||
     typeof scores.production !== 'number' ||
     typeof scores.improvement !== 'number' ||
-    typeof scores.business !== 'number'
+    typeof scores.continuation !== 'number'
   ) {
     return false;
   }
 
-  // computedTypeとtimestampの検証
+  // computedTypeとlowestAxisとtimestampの検証
   return (
     isDiagnosisType(session.computedType) &&
+    isAxisKey(session.lowestAxis) &&
     typeof session.timestamp === 'number'
   );
 }

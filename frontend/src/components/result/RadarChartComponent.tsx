@@ -26,12 +26,12 @@ export const RadarChartComponent: React.FC<RadarChartComponentProps> = ({
   lowestAxis,
 }) => {
   // 軸の順序を定義（上→右→下→左）
-  const axisOrder: AxisKey[] = ['design', 'production', 'improvement', 'business'];
+  const axisOrder: AxisKey[] = ['design', 'production', 'improvement', 'continuation'];
   const axisLabels: Record<AxisKey, string> = {
     design: '設計力',
     production: '量産力',
     improvement: '改善力',
-    business: '事業力',
+    continuation: '継続力',
   };
 
   // レーダーチャート用データを作成

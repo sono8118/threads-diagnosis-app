@@ -29,9 +29,9 @@ function calculateAxisScores(answers: Answer[]): AxisScores {
     7: 'improvement',
     8: 'improvement',
     9: 'improvement',
-    10: 'business',
-    11: 'business',
-    12: 'business',
+    10: 'continuation',
+    11: 'continuation',
+    12: 'continuation',
   };
 
   // 軸ごとのスコアを集計
@@ -39,7 +39,7 @@ function calculateAxisScores(answers: Answer[]): AxisScores {
     design: 0,
     production: 0,
     improvement: 0,
-    business: 0,
+    continuation: 0,
   };
 
   answers.forEach((answer) => {
@@ -60,7 +60,7 @@ function normalizeScores(rawScores: AxisScores): AxisScores {
     design: Math.round((rawScores.design / maxScore) * 100),
     production: Math.round((rawScores.production / maxScore) * 100),
     improvement: Math.round((rawScores.improvement / maxScore) * 100),
-    business: Math.round((rawScores.business / maxScore) * 100),
+    continuation: Math.round((rawScores.continuation / maxScore) * 100),
   };
 }
 
@@ -72,7 +72,7 @@ function calculateTotalScore(normalizedScores: AxisScores): number {
     normalizedScores.design +
     normalizedScores.production +
     normalizedScores.improvement +
-    normalizedScores.business;
+    normalizedScores.continuation;
 
   return Math.round(sum / 4);
 }
@@ -85,30 +85,26 @@ function calculateTotalScore(normalizedScores: AxisScores): number {
  * 最低スコアの軸を特定
  *
  * 同点時の優先順位:
- * - 通常（低〜中スコア）: design > production > improvement > business
- * - 高得点（全軸80点以上）: business > improvement > production > design
+ * - 低～中スコア（80点未満の軸がある）: continuation > design > production > improvement
+ * - 高得点（全軸80点以上）: improvement > continuation > production > design
  */
 function findLowestAxis(rawScores: AxisScores, normalizedScores: AxisScores): AxisKey {
   // 全軸が高得点（80点以上）かチェック
   const allHighScore = Object.values(normalizedScores).every((score) => score >= 80);
 
-  // 高得点の場合は逆優先順位（ビジネス優先）
+  // 優先順位の定義（配列の順序 = 優先度）
   const axes: AxisKey[] = allHighScore
-    ? ['business', 'improvement', 'production', 'design']
-    : ['design', 'production', 'improvement', 'business'];
+    ? ['improvement', 'continuation', 'production', 'design']
+    : ['continuation', 'design', 'production', 'improvement'];
 
-  let lowestAxis: AxisKey = axes[0];
-  let lowestScore = rawScores[axes[0]];
+  // 最低スコアを計算
+  const minScore = Math.min(...axes.map((axis) => rawScores[axis]));
 
-  // 同点時の優先順位を考慮して順番に評価
-  axes.forEach((axis) => {
-    if (rawScores[axis] < lowestScore) {
-      lowestScore = rawScores[axis];
-      lowestAxis = axis;
-    }
-  });
+  // 最低スコアと同点で、優先順位が最も高い軸を返す
+  // (配列の先頭から順に探すことで、優先順位を考慮)
+  const lowestAxis = axes.find((axis) => rawScores[axis] === minScore);
 
-  return lowestAxis;
+  return lowestAxis || axes[0];
 }
 
 /**
@@ -119,7 +115,7 @@ function determineDiagnosisType(lowestAxis: AxisKey): DiagnosisType {
     design: 'T1',
     production: 'T2',
     improvement: 'T3',
-    business: 'T4',
+    continuation: 'T4',
   };
 
   return typeMapping[lowestAxis];
@@ -160,8 +156,8 @@ export function calculateDiagnosis(answers: Answer[]): DiagnosisResult {
   } else if (isExcellent) {
     // 全軸85点以上の場合は「安定成長タイプ」
     diagnosisType = 'BALANCED';
-    // 最低軸は形式的にbusinessにしておく（実際には使われない）
-    lowestAxis = 'business';
+    // 最低軸は形式的にcontinuationにしておく（実際には使われない）
+    lowestAxis = 'continuation';
   } else {
     // 通常の判定: 最低軸を特定してタイプ判定
     lowestAxis = findLowestAxis(rawScores, normalizedScores);

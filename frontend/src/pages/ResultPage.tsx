@@ -44,7 +44,7 @@ export const ResultPage: React.FC = () => {
       (data.computedScores.design +
         data.computedScores.production +
         data.computedScores.improvement +
-        data.computedScores.business) /
+        data.computedScores.continuation) /
         4
     );
 
@@ -80,14 +80,12 @@ export const ResultPage: React.FC = () => {
     (computedScores.design +
       computedScores.production +
       computedScores.improvement +
-      computedScores.business) /
+      computedScores.continuation) /
       4
   );
 
-  // 最低スコアの軸を特定
-  const lowestAxis: AxisKey = (
-    Object.entries(computedScores) as [AxisKey, number][]
-  ).reduce((min, [key, value]) => (value < computedScores[min] ? key : min), 'design' as AxisKey);
+  // 最低スコアの軸を特定（優先度順に計算済みのものを使用）
+  const lowestAxis: AxisKey = data.lowestAxis;
 
   // 軸詳細データを作成（動的生成、タイプ別に使用する説明を切り替え）
   const axisDetails = (Object.keys(AXIS_DESCRIPTIONS) as AxisKey[]).map((axisKey) => {
@@ -497,6 +495,7 @@ export const ResultPage: React.FC = () => {
                   lineHeight: 2.0,
                   fontSize: 17,
                   color: 'rgba(0, 0, 0, 0.7)',
+                  whiteSpace: 'pre-line',
                 }}
               >
                 {step.description}

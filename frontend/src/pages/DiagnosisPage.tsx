@@ -209,6 +209,7 @@ export const DiagnosisPage: React.FC = () => {
       answers,
       computedScores: result.normalizedScores,
       computedType: result.diagnosisType,
+      lowestAxis: result.lowestAxis,
       customMessages,
       timestamp: Date.now(),
     };

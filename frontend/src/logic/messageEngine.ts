@@ -37,8 +37,8 @@ function evaluateCondition(
     const answer = answers.find((a) => a.questionId === questionId);
     fieldValue = answer ? answer.value : 0;
   } else {
-    // 軸スコア（design, production, improvement, business）
-    const axisKey = field as 'design' | 'production' | 'improvement' | 'business';
+    // 軸スコア（design, production, improvement, continuation）
+    const axisKey = field as 'design' | 'production' | 'improvement' | 'continuation';
     fieldValue = diagnosisResult.normalizedScores[axisKey];
   }
 
