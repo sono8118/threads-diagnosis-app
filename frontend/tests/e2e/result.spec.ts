@@ -419,3 +419,129 @@ test('E2E-RESULT-007: スクショ推奨案内表示確認', async ({ page }) =>
     await expect(screenshotNotice).toBeVisible();
   });
 });
+
+// 🆕 E2E-RESULT-008: MIXタイプの表示確認（6パターン）
+test('E2E-RESULT-008: MIXタイプの表示確認（6パターン）', async ({ page }) => {
+  // ブラウザコンソールログを収集
+  const consoleLogs: Array<{ type: string; text: string }> = [];
+  page.on('console', (msg) => {
+    consoleLogs.push({
+      type: msg.type(),
+      text: msg.text(),
+    });
+  });
+
+  // 6つのMIXタイプのテストデータを定義
+  // sessionStorageに直接注入するため、正確なスコアを設定
+  const mixPatterns = [
+    {
+      type: 'T1T2-MIX',
+      typeName: '設計力×量産力が弱い複合タイプ',
+      description: '設計力と量産力が、今いちばん伸びしろが近い領域です',
+      sessionData: {
+        answers: Array.from({ length: 12 }, (_, i) => ({ questionId: i + 1, value: 3 })),
+        computedScores: { design: 38, production: 42, improvement: 92, continuation: 92 },
+        computedType: 'T1T2-MIX',
+        lowestAxis: 'design',
+        customMessages: [],
+        timestamp: Date.now(),
+      },
+    },
+    {
+      type: 'T1T3-MIX',
+      typeName: '設計力×改善力が弱い複合タイプ',
+      description: '設計力と改善力が、今いちばん伸びしろが近い領域です',
+      sessionData: {
+        answers: Array.from({ length: 12 }, (_, i) => ({ questionId: i + 1, value: 3 })),
+        computedScores: { design: 33, production: 92, improvement: 38, continuation: 92 },
+        computedType: 'T1T3-MIX',
+        lowestAxis: 'design',
+        customMessages: [],
+        timestamp: Date.now(),
+      },
+    },
+    {
+      type: 'T1T4-MIX',
+      typeName: '設計力×継続力が弱い複合タイプ',
+      description: '設計力と継続力が、今いちばん伸びしろが近い領域です',
+      sessionData: {
+        answers: Array.from({ length: 12 }, (_, i) => ({ questionId: i + 1, value: 3 })),
+        computedScores: { design: 29, production: 92, improvement: 92, continuation: 33 },
+        computedType: 'T1T4-MIX',
+        lowestAxis: 'design',
+        customMessages: [],
+        timestamp: Date.now(),
+      },
+    },
+    {
+      type: 'T2T3-MIX',
+      typeName: '量産力×改善力が弱い複合タイプ',
+      description: '量産力と改善力が、今いちばん伸びしろが近い領域です',
+      sessionData: {
+        answers: Array.from({ length: 12 }, (_, i) => ({ questionId: i + 1, value: 3 })),
+        computedScores: { design: 92, production: 42, improvement: 46, continuation: 92 },
+        computedType: 'T2T3-MIX',
+        lowestAxis: 'production',
+        customMessages: [],
+        timestamp: Date.now(),
+      },
+    },
+    {
+      type: 'T2T4-MIX',
+      typeName: '量産力×継続力が弱い複合タイプ',
+      description: '量産力と継続力が、今いちばん伸びしろが近い領域です',
+      sessionData: {
+        answers: Array.from({ length: 12 }, (_, i) => ({ questionId: i + 1, value: 3 })),
+        computedScores: { design: 92, production: 38, improvement: 92, continuation: 42 },
+        computedType: 'T2T4-MIX',
+        lowestAxis: 'production',
+        customMessages: [],
+        timestamp: Date.now(),
+      },
+    },
+    {
+      type: 'T3T4-MIX',
+      typeName: '改善力×継続力が弱い複合タイプ',
+      description: '改善力と継続力が、今いちばん伸びしろが近い領域です',
+      sessionData: {
+        answers: Array.from({ length: 12 }, (_, i) => ({ questionId: i + 1, value: 3 })),
+        computedScores: { design: 92, production: 92, improvement: 50, continuation: 54 },
+        computedType: 'T3T4-MIX',
+        lowestAxis: 'improvement',
+        customMessages: [],
+        timestamp: Date.now(),
+      },
+    },
+  ];
+
+  // 各MIXタイプパターンをテスト
+  for (const pattern of mixPatterns) {
+    await test.step(`${pattern.type}: ${pattern.typeName}の表示確認`, async () => {
+      // sessionStorageに直接データを注入
+      await page.goto('http://localhost:3247/');
+      await page.evaluate((data) => {
+        sessionStorage.setItem('threads_diagnosis_session', JSON.stringify(data));
+      }, pattern.sessionData);
+
+      // 結果ページへ遷移
+      await page.goto('http://localhost:3247/result');
+      await page.waitForLoadState('networkidle');
+
+      // タイプ名が表示されることを確認
+      const typeName = page.locator(`text=${pattern.typeName}`);
+      await expect(typeName).toBeVisible();
+
+      // 説明文が表示されることを確認
+      const description = page.locator(`text=${pattern.description}`);
+      await expect(description).toBeVisible();
+
+      // レーダーチャートが表示されることを確認
+      const radarChart = page.locator('.recharts-surface');
+      await expect(radarChart).toBeVisible();
+
+      // CTA（商品提案）ボタンが表示されることを確認
+      const ctaButton = page.locator('button:has-text("Threadsがラクになる方法を見てみる")');
+      await expect(ctaButton).toBeVisible();
+    });
+  }
+});

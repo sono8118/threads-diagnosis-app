@@ -109,8 +109,55 @@ function findLowestAxis(rawScores: AxisScores, normalizedScores: AxisScores): Ax
 
 /**
  * 最低軸からタイプを判定
+ * 🆕 MIXタイプ判定追加（2026-01-30）
+ *
+ * @param lowestAxis - 最低スコアの軸
+ * @param normalizedScores - 正規化スコア（100点換算）
+ * @returns 診断タイプ（単一タイプまたはMIXタイプ）
  */
-function determineDiagnosisType(lowestAxis: AxisKey): DiagnosisType {
+function determineDiagnosisType(
+  lowestAxis: AxisKey,
+  normalizedScores: AxisScores
+): DiagnosisType {
+  // 🆕 MIX判定閾値（最低軸 + 5点）
+  const MIX_THRESHOLD = 5;
+
+  // 🆕 最低スコアと2番目に低いスコアを特定
+  const scores = [
+    { axis: 'design' as AxisKey, score: normalizedScores.design },
+    { axis: 'production' as AxisKey, score: normalizedScores.production },
+    { axis: 'improvement' as AxisKey, score: normalizedScores.improvement },
+    { axis: 'continuation' as AxisKey, score: normalizedScores.continuation },
+  ];
+
+  // スコア順にソート（昇順）
+  scores.sort((a, b) => a.score - b.score);
+
+  const minScore = scores[0].score;
+  const secondMinScore = scores[1].score;
+  const minAxis = scores[0].axis;
+  const secondMinAxis = scores[1].axis;
+
+  // 🆕 僅差判定（1〜5点差でMIXタイプ）
+  // 確定仕様（パターンB）：0点差（完全同点）は除外し、1〜5点差のみMIX判定
+  const scoreDiff = secondMinScore - minScore;
+  if (scoreDiff > 0 && scoreDiff <= MIX_THRESHOLD) {
+    // タイプマッピング
+    const typeMapping: Record<AxisKey, string> = {
+      design: 'T1',
+      production: 'T2',
+      improvement: 'T3',
+      continuation: 'T4',
+    };
+
+    const minType = typeMapping[minAxis];
+    const secondMinType = typeMapping[secondMinAxis];
+
+    // MIXタイプを生成（例: T2T4-MIX）
+    return `${minType}${secondMinType}-MIX` as DiagnosisType;
+  }
+
+  // 単一タイプ判定（完全同点の場合もこちらを使用）
   const typeMapping: Record<AxisKey, DiagnosisType> = {
     design: 'T1',
     production: 'T2',
@@ -159,9 +206,9 @@ export function calculateDiagnosis(answers: Answer[]): DiagnosisResult {
     // 最低軸は形式的にcontinuationにしておく（実際には使われない）
     lowestAxis = 'continuation';
   } else {
-    // 通常の判定: 最低軸を特定してタイプ判定
+    // 通常の判定: 最低軸を特定してタイプ判定（🆕 MIXタイプ対応）
     lowestAxis = findLowestAxis(rawScores, normalizedScores);
-    diagnosisType = determineDiagnosisType(lowestAxis);
+    diagnosisType = determineDiagnosisType(lowestAxis, normalizedScores);
   }
 
   return {

@@ -53,7 +53,7 @@ describe('DiagnosisPage - 初期表示（診断開始画面）', () => {
 
     expect(screen.getByText('Threads運用診断')).toBeInTheDocument();
     expect(
-      screen.getByText('12問（2〜3分）で、「Threadsしんどい理由」がやさしく見えてきます')
+      screen.getByText(/12問（2〜3分）で、/)
     ).toBeInTheDocument();
     expect(screen.getByText('診断でわかること')).toBeInTheDocument();
   });

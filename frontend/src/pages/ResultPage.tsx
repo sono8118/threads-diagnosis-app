@@ -20,6 +20,27 @@ import { useGA4 } from '@/hooks/useGA4';
 import type { AxisKey, DiagnosisSession } from '@/types';
 
 /**
+ * MIXタイプから対象軸を抽出
+ * @example 'T3T4-MIX' → ['improvement', 'continuation']
+ */
+const getAxesFromMixType = (type: string): AxisKey[] => {
+  if (!type.endsWith('-MIX')) return [];
+
+  const typeMapping: Record<string, AxisKey> = {
+    T1: 'design',
+    T2: 'production',
+    T3: 'improvement',
+    T4: 'continuation',
+  };
+
+  // 'T3T4-MIX' → ['T3', 'T4']
+  const match = type.match(/^(T\d)(T\d)-MIX$/);
+  if (!match) return [];
+
+  return [typeMapping[match[1]], typeMapping[match[2]]];
+};
+
+/**
  * 結果ページコンポーネント
  * - sessionStorageから診断データを取得
  * - データがない場合は診断トップへリダイレクト
@@ -100,13 +121,41 @@ export const ResultPage: React.FC = () => {
       // BALANCED: 全軸に専用説明を使用
       axisDescription = BALANCED_AXIS_DESCRIPTIONS[axisKey].description;
     } else {
-      // T1-T4: スコアと最低軸に応じて説明を切り替え
+      // T1-T4 & MIX: スコアと最低軸に応じて説明を切り替え
       isLowest = lowestAxis === axisKey;
       const axisData = AXIS_DESCRIPTIONS[axisKey];
 
-      if (isLowest) {
-        // 最低軸: lowestDescriptionを使用
-        axisDescription = axisData.lowestDescription;
+      // 🆕 MIX軸判定（最優先処理）
+      const mixAxes = getAxesFromMixType(computedType);
+      const isMixAxis = mixAxes.includes(axisKey);
+
+      if (isMixAxis) {
+        // MIX軸は強み扱い禁止、常に伸びしろ翻訳
+        if (totalScore >= 80) {
+          // HIGH帯のMIX軸: lowScoreDescriptionを使用
+          axisDescription = axisData.lowScoreDescription;
+        } else {
+          // MID/LOW帯のMIX軸: lowestDescriptionを使用
+          axisDescription = axisData.lowestDescription;
+        }
+      } else if (isLowest) {
+        // 🆕 HIGH帯ガード適用（総合80点以上は厳しい表現を避ける）
+        if (totalScore >= 80) {
+          // HIGH帯でも最低軸はスコアで3段階判定
+          if (score >= 80) {
+            // 最低軸80点以上: 強み寄りでOK
+            axisDescription = axisData.description;
+          } else if (score >= 70) {
+            // 最低軸70-79点: 伸びしろ翻訳（75点はここ）
+            axisDescription = axisData.lowScoreDescription;
+          } else {
+            // 最低軸70点未満: softバージョン優先、なければlowest
+            axisDescription = axisData.softLowestDescription ?? axisData.lowestDescription;
+          }
+        } else {
+          // MID/LOW帯: lowestDescriptionを使用
+          axisDescription = axisData.lowestDescription;
+        }
       } else if (score < 70) {
         // 最低軸以外で70点未満: lowScoreDescriptionを使用
         axisDescription = axisData.lowScoreDescription;
@@ -250,7 +299,9 @@ export const ResultPage: React.FC = () => {
               mx: 'auto',
             }}
           >
-            {typeMetadata.description}
+            {totalScore >= 80 && typeMetadata.highScoreMessage
+              ? typeMetadata.highScoreMessage
+              : typeMetadata.description}
           </Typography>
 
           {/* MUI: Typography fontSize={15} color="#5a6a7a" mt={2} mb={5} maxWidth={600} mx="auto" */}

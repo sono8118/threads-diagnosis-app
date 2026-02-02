@@ -33,7 +33,7 @@ export const QUESTIONS: Question[] = [
   },
   {
     id: 3,
-    question: '他の発信者との違い（あなたらしさ）を、一言で説明できますか？',
+    question: 'あなたの発信で、「ここは大事にしている」といえるポイントはありますか？',
     options: COMMON_OPTIONS,
     axis: 'design',
   },

@@ -28,6 +28,7 @@ export const MESSAGE_RULES: MessageRules = {
 
   /**
    * 主メッセージ（タイプ別、必ず1つ表示）
+   * 🆕 MIXタイプ追加（2026-01-30）
    */
   mainMessages: {
     BEGINNER:
@@ -38,6 +39,13 @@ export const MESSAGE_RULES: MessageRules = {
     T2: 'やる気はあるのに続ける仕組みがない状態です。仕組みと習慣で楽になりましょう。',
     T3: '頑張っているのに成果に変わらない状態です。改善ループを回して成果を出しましょう。',
     T4: '今は、頑張ればできるのに、「頑張らないと続かない形」になっています。仕組みを整えれば、迷わず・疲れず・自然に回る運用に変わります。',
+    // 🆕 MIXタイプのメッセージ
+    'T1T2-MIX': '設計力と量産力が同時に弱い状態です。まずはターゲット設定と型作りから始めましょう。',
+    'T1T3-MIX': '設計力と改善力が同時に弱い状態です。ターゲット設定と改善ループの確立が必要です。',
+    'T1T4-MIX': '設計力と継続力が同時に弱い状態です。方向性の設定と続ける仕組み作りから始めましょう。',
+    'T2T3-MIX': '量産力と改善力が同時に弱い状態です。型作りと改善ループの両方を整えましょう。',
+    'T2T4-MIX': '量産力と継続力が同時に弱い状態です。続けられる仕組みと型の両方が必要です。',
+    'T3T4-MIX': '改善力と継続力が同時に弱い状態です。成果の確認と継続の仕組み、両方を整えましょう。',
   },
 
   /**
@@ -51,6 +59,11 @@ export const MESSAGE_RULES: MessageRules = {
     {
       id: 'q6-zero',
       priority: 100,
+      severity: 'hard', // 🆕 致命的な指摘
+      meta: {
+        questionKey: 'Q6',
+        axisKey: 'production',
+      },
       conditions: {
         logic: 'AND',
         conditions: [
@@ -68,6 +81,11 @@ export const MESSAGE_RULES: MessageRules = {
     {
       id: 'q7-zero',
       priority: 95,
+      severity: 'hard', // 🆕 致命的な指摘
+      meta: {
+        questionKey: 'Q7',
+        axisKey: 'improvement',
+      },
       conditions: {
         logic: 'AND',
         conditions: [
@@ -85,6 +103,11 @@ export const MESSAGE_RULES: MessageRules = {
     {
       id: 'q10-zero',
       priority: 95,
+      severity: 'hard', // 🆕 致命的な指摘
+      meta: {
+        questionKey: 'Q10',
+        axisKey: 'continuation',
+      },
       conditions: {
         logic: 'AND',
         conditions: [
@@ -106,6 +129,11 @@ export const MESSAGE_RULES: MessageRules = {
     {
       id: 'q6-high',
       priority: 85,
+      severity: 'normal', // 🆕 標準的な指摘
+      meta: {
+        questionKey: 'Q6',
+        axisKey: 'production',
+      },
       conditions: {
         logic: 'AND',
         conditions: [
@@ -127,6 +155,11 @@ export const MESSAGE_RULES: MessageRules = {
     {
       id: 'q8-zero',
       priority: 80,
+      severity: 'hard', // 🆕 致命的な指摘
+      meta: {
+        questionKey: 'Q8',
+        axisKey: 'improvement',
+      },
       conditions: {
         logic: 'AND',
         conditions: [
@@ -144,6 +177,11 @@ export const MESSAGE_RULES: MessageRules = {
     {
       id: 'q9-zero',
       priority: 75,
+      severity: 'normal', // 🆕 標準的な指摘
+      meta: {
+        questionKey: 'Q9',
+        axisKey: 'improvement',
+      },
       conditions: {
         logic: 'AND',
         conditions: [
@@ -165,6 +203,11 @@ export const MESSAGE_RULES: MessageRules = {
     {
       id: 'q11-zero',
       priority: 100,
+      severity: 'hard', // 🆕 致命的な指摘
+      meta: {
+        questionKey: 'Q11',
+        axisKey: 'continuation',
+      },
       conditions: {
         logic: 'AND',
         conditions: [
@@ -182,6 +225,11 @@ export const MESSAGE_RULES: MessageRules = {
     {
       id: 'q12-zero',
       priority: 90,
+      severity: 'hard', // 🆕 致命的な指摘
+      meta: {
+        questionKey: 'Q12',
+        axisKey: 'continuation',
+      },
       conditions: {
         logic: 'AND',
         conditions: [

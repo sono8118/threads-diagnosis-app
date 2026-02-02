@@ -236,7 +236,11 @@ export const DiagnosisPage: React.FC = () => {
               color="text.secondary"
               sx={{ fontSize: '1.125rem', lineHeight: 1.7, color: '#546e7a' }}
             >
-              12問（2〜3分）で、「Threadsしんどい理由」がやさしく見えてきます
+              12問（2〜3分）で、
+              <br />
+              Threads運用の「今の状態」をチェック。
+              <br />
+              無理なく整えるヒントが見えてきます
             </Typography>
           </Box>
 

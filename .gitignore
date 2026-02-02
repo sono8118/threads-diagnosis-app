@@ -42,3 +42,4 @@ coverage_html_report/
 # Test outputs
 *.test.js.snap
 __snapshots__/
+frontend/tests/temp/

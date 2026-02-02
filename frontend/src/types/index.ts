@@ -8,8 +8,21 @@
 
 /**
  * 診断タイプ
+ * 🆕 MIXタイプ追加（2026-01-30）: 複数軸が同時に弱い状態
  */
-export type DiagnosisType = 'BEGINNER' | 'T1' | 'T2' | 'T3' | 'T4' | 'BALANCED';
+export type DiagnosisType =
+  | 'BEGINNER'
+  | 'T1'
+  | 'T2'
+  | 'T3'
+  | 'T4'
+  | 'BALANCED'
+  | 'T1T2-MIX'  // 🆕 設計力と量産力が同時に弱い
+  | 'T1T3-MIX'  // 🆕 設計力と改善力が同時に弱い
+  | 'T1T4-MIX'  // 🆕 設計力と継続力が同時に弱い
+  | 'T2T3-MIX'  // 🆕 量産力と改善力が同時に弱い
+  | 'T2T4-MIX'  // 🆕 量産力と継続力が同時に弱い
+  | 'T3T4-MIX'; // 🆕 改善力と継続力が同時に弱い
 
 /**
  * 回答値（0点、3点、6点、8点）
@@ -203,6 +216,8 @@ export interface Conditions {
 
 /**
  * メッセージルール
+ * 🆕 severity追加（2026-01-30）: HIGH帯ガード用
+ * 🆕 meta追加（2026-01-31）: 質問と軸の紐付け情報
  */
 export interface MessageRule {
   /** ルールID */
@@ -215,6 +230,15 @@ export interface MessageRule {
   message: string;
   /** 有効/無効フラグ */
   enabled: boolean;
+  /** 🆕 厳しさレベル（hard: 致命的, normal: 標準, soft: やさしい） */
+  severity?: 'hard' | 'normal' | 'soft';
+  /** 🆕 メタ情報（質問と軸の紐付け） */
+  meta?: {
+    /** 質問キー（Q1-Q12） */
+    questionKey: `Q${QuestionId}`;
+    /** 軸キー */
+    axisKey: AxisKey;
+  };
 }
 
 /**
@@ -425,11 +449,28 @@ export function isQuestionId(id: unknown): id is QuestionId {
 
 /**
  * 診断タイプの型ガード
+ * 🆕 MIXタイプ対応（2026-01-30）
  * @param type - 検証する値
  * @returns 診断タイプとして有効な場合はtrue
  */
 export function isDiagnosisType(type: unknown): type is DiagnosisType {
-  return typeof type === 'string' && ['T1', 'T2', 'T3', 'T4'].includes(type);
+  return (
+    typeof type === 'string' &&
+    [
+      'BEGINNER',
+      'T1',
+      'T2',
+      'T3',
+      'T4',
+      'BALANCED',
+      'T1T2-MIX',
+      'T1T3-MIX',
+      'T1T4-MIX',
+      'T2T3-MIX',
+      'T2T4-MIX',
+      'T3T4-MIX',
+    ].includes(type)
+  );
 }
 
 /**
