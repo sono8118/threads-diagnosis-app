@@ -7,6 +7,7 @@ import {
   PolarRadiusAxis,
   ResponsiveContainer,
 } from 'recharts';
+import { useMediaQuery, useTheme } from '@mui/material';
 import type { AxisScores, AxisKey } from '@/types';
 
 interface RadarChartComponentProps {
@@ -20,11 +21,15 @@ interface RadarChartComponentProps {
  * 4軸レーダーチャートコンポーネント
  * - 最低軸のみオレンジ色（#d9a88a）で強調
  * - Rechartsを使用
+ * - レスポンシブ対応（スマホ/PC自動調整）
  */
 export const RadarChartComponent: React.FC<RadarChartComponentProps> = ({
   scores,
   lowestAxis,
 }) => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+
   // 軸の順序を定義（上→右→下→左）
   const axisOrder: AxisKey[] = ['design', 'production', 'improvement', 'continuation'];
   const axisLabels: Record<AxisKey, string> = {
@@ -40,10 +45,17 @@ export const RadarChartComponent: React.FC<RadarChartComponentProps> = ({
     value: scores[key],
   }));
 
+  // レスポンシブ設定
+  const fontSize = isMobile ? 12 : 15;
+  const margin = isMobile
+    ? { top: 20, right: 40, bottom: 20, left: 40 }
+    : { top: 30, right: 60, bottom: 30, left: 60 };
+
   return (
     <ResponsiveContainer width="100%" height="100%">
       <RadarChart
         data={chartData}
+        margin={margin}
         style={{ outline: 'none', pointerEvents: 'none' }}
       >
         {/* 背景円（目盛り） */}
@@ -52,7 +64,7 @@ export const RadarChartComponent: React.FC<RadarChartComponentProps> = ({
         {/* 軸ラベル */}
         <PolarAngleAxis
           dataKey="axis"
-          tick={{ fill: '#666', fontSize: 15, fontWeight: 500 }}
+          tick={{ fill: '#666', fontSize, fontWeight: 500 }}
         />
 
         {/* 半径軸（0-100の範囲を固定） */}
