@@ -141,13 +141,10 @@ export const ResultPage: React.FC = () => {
       } else if (isLowest) {
         // 🆕 HIGH帯ガード適用（総合80点以上は厳しい表現を避ける）
         if (totalScore >= 80) {
-          // HIGH帯でも最低軸はスコアで3段階判定
-          if (score >= 80) {
-            // 最低軸80点以上: 強み寄りでOK
-            axisDescription = axisData.description;
-          } else if (score >= 70) {
-            // 最低軸70-79点: 伸びしろ翻訳（75点はここ）
-            axisDescription = axisData.lowScoreDescription;
+          // HIGH帯: 最低軸は必ず課題として示すが、柔らかい表現を使用
+          if (score >= 70) {
+            // 最低軸70点以上: softバージョン優先、なければlowScoreDescription
+            axisDescription = axisData.softLowestDescription ?? axisData.lowScoreDescription;
           } else {
             // 最低軸70点未満: softバージョン優先、なければlowest
             axisDescription = axisData.softLowestDescription ?? axisData.lowestDescription;
