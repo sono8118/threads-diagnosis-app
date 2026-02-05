@@ -9,10 +9,8 @@ interface DiagnosisState {
   // 状態
   currentQuestionIndex: number; // 現在の質問インデックス（0〜11）
   answers: Answer[]; // 回答リスト
-  hasConsented: boolean; // 同意チェック
 
   // アクション
-  setConsent: (consented: boolean) => void;
   setAnswer: (questionId: number, value: number) => void;
   nextQuestion: () => void;
   previousQuestion: () => void;
@@ -23,10 +21,6 @@ export const useDiagnosisStore = create<DiagnosisState>((set) => ({
   // 初期状態
   currentQuestionIndex: 0,
   answers: [],
-  hasConsented: false,
-
-  // 同意設定
-  setConsent: (consented) => set({ hasConsented: consented }),
 
   // 回答設定
   setAnswer: (questionId, value) =>
@@ -61,6 +55,5 @@ export const useDiagnosisStore = create<DiagnosisState>((set) => ({
     set({
       currentQuestionIndex: 0,
       answers: [],
-      hasConsented: false,
     }),
 }));

@@ -11,11 +11,6 @@ import {
   Paper,
   LinearProgress,
   Stack,
-  Checkbox,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { useDiagnosisStore } from '../stores/diagnosisStore';
@@ -43,8 +38,6 @@ export const DiagnosisPage: React.FC = () => {
   const {
     currentQuestionIndex,
     answers,
-    hasConsented,
-    setConsent,
     setAnswer,
     nextQuestion,
     previousQuestion,
@@ -52,7 +45,6 @@ export const DiagnosisPage: React.FC = () => {
 
   // ローカル状態
   const [screenState, setScreenState] = useState<ScreenState>('start');
-  const [isConsentAlertOpen, setIsConsentAlertOpen] = useState<boolean>(false);
 
   // setTimeout競合防止用フラグ（複数回のhandleViewResult呼び出しを防ぐ）
   const isTransitioningRef = useRef<boolean>(false);
@@ -102,21 +94,9 @@ export const DiagnosisPage: React.FC = () => {
   // ========== 画面1: 診断開始画面のハンドラー ==========
 
   /**
-   * 同意チェックボックスの切り替え
-   */
-  const handleConsentChange = () => {
-    setConsent(!hasConsented);
-  };
-
-  /**
    * 診断開始ボタンクリック
    */
   const handleStartDiagnosis = () => {
-    if (!hasConsented) {
-      setIsConsentAlertOpen(true);
-      return;
-    }
-
     // GA4イベント送信
     sendEvent('Diagnosis_Start', {
       diagnosis_type: 'T1', // 開始時点では不明
@@ -185,13 +165,6 @@ export const DiagnosisPage: React.FC = () => {
     previousQuestion();
   };
 
-  /**
-   * 同意確認ダイアログを閉じる
-   */
-  const handleCloseConsentAlert = () => {
-    setIsConsentAlertOpen(false);
-  };
-
   // ========== 画面3: 完了画面のハンドラー ==========
 
   /**
@@ -258,49 +231,6 @@ export const DiagnosisPage: React.FC = () => {
               </Typography>
               <Typography variant="body1" component="li">
                 これから楽になる一歩
-              </Typography>
-            </Box>
-          </Paper>
-
-          {/* 同意チェックボックスカード */}
-          <Paper
-            onClick={handleConsentChange}
-            sx={{
-              p: 2.5,
-              mb: 4,
-              borderRadius: 3,
-              cursor: 'pointer',
-              border: hasConsented ? '1px solid rgba(107, 123, 140, 0.2)' : '1px solid #E0E4E8',
-              background: hasConsented ? '#F7FAFD' : '#ffffff',
-              boxShadow: hasConsented
-                ? '0px 2px 6px rgba(0, 0, 0, 0.05)'
-                : '0px 2px 4px rgba(0,0,0,0.08)',
-              transition: 'all 0.2s ease',
-              '&:hover': {
-                background: hasConsented ? '#F7FAFD' : '#F4F7FA',
-              },
-            }}
-          >
-            <Box display="flex" alignItems="center">
-              <Checkbox
-                checked={hasConsented}
-                size="small"
-                sx={{
-                  mr: 1.5,
-                  color: '#D0D7DE',
-                  '&.Mui-checked': {
-                    color: '#6B7B8C',
-                  },
-                }}
-              />
-              <Typography
-                variant="body2"
-                sx={{
-                  color: hasConsented ? 'rgba(0, 0, 0, 0.90)' : 'rgba(0, 0, 0, 0.87)',
-                  transition: 'all 0.2s ease',
-                }}
-              >
-                診断結果に合ったアドバイスを受け取ります
               </Typography>
             </Box>
           </Paper>
@@ -587,55 +517,6 @@ export const DiagnosisPage: React.FC = () => {
         </Container>
       )}
 
-      {/* 同意確認ダイアログ */}
-      <Dialog
-        open={isConsentAlertOpen}
-        onClose={handleCloseConsentAlert}
-        maxWidth="sm"
-        fullWidth
-        PaperProps={{
-          sx: {
-            borderRadius: 3,
-            boxShadow: '0px 8px 32px rgba(0, 0, 0, 0.15)',
-          },
-        }}
-      >
-        <DialogTitle
-          sx={{
-            fontSize: '1.25rem',
-            fontWeight: 600,
-            color: '#2c3e50',
-            pb: 1,
-          }}
-        >
-          同意確認
-        </DialogTitle>
-        <DialogContent>
-          <Typography
-            sx={{
-              fontSize: '1rem',
-              color: '#546e7a',
-              lineHeight: 1.6,
-            }}
-          >
-            診断結果に合ったアドバイスを受け取ることに同意してください
-          </Typography>
-        </DialogContent>
-        <DialogActions sx={{ p: 2 }}>
-          <Button
-            onClick={handleCloseConsentAlert}
-            variant="contained"
-            color="primary"
-            sx={{
-              borderRadius: 2,
-              textTransform: 'none',
-              fontWeight: 500,
-            }}
-          >
-            OK
-          </Button>
-        </DialogActions>
-      </Dialog>
     </>
   );
 };
